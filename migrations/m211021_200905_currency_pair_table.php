@@ -15,6 +15,8 @@ class m211021_200905_currency_pair_table extends Migration
         $this->createTable('currency_pair', [
             'id' => $this->primaryKey(),
             'name' => $this->string(15)->unique()->notNull(),
+            'first_currency' => $this->string(15)->notNull(),
+            'second_currency' => $this->string(15)->notNull(),
         ]);
     }
 
