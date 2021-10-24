@@ -66,7 +66,5 @@ class createTradingGridAction extends CreateAction
         } else {
             return $firstOrderModel;
         }
-
-
     }
 }
