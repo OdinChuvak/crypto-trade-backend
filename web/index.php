@@ -8,7 +8,7 @@ require __DIR__ . '/../vendor/autoload.php';
 require __DIR__ . '/../vendor/yiisoft/yii2/Yii.php';
 
 // add ENV data to global var $_ENV
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '\..');
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
 $config = require __DIR__ . '/../config/web.php';
