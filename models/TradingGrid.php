@@ -10,4 +10,11 @@ class TradingGrid extends ActiveRecord
     {
         return 'trading_grid';
     }
+
+    public function rules()
+    {
+        return [
+            [['pair_id', 'order_step', 'order_amount'], 'required', 'message' => 'The value cannot be empty.'],
+        ];
+    }
 }
