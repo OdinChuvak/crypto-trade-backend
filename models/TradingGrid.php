@@ -17,4 +17,16 @@ class TradingGrid extends ActiveRecord
             [['pair_id', 'order_step', 'order_amount'], 'required', 'message' => 'The value cannot be empty.'],
         ];
     }
+
+    public function extraFields()
+    {
+        return [
+            'pair'
+        ];
+    }
+
+    public function getPair()
+    {
+        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);
+    }
 }
