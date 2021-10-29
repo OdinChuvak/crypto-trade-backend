@@ -24,7 +24,8 @@ $config = [
         ],
         'user' => [
             'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
+            'enableAutoLogin' => false,
+            'enableSession' => false,
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -56,6 +57,7 @@ $config = [
                         'trading-grid',
                         'currency-pair',
                         'order',
+                        'authentication',
                     ],
                     'pluralize' => false
                 ],
