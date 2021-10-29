@@ -33,10 +33,8 @@ class AuthenticationController extends BaseApiController
 
     public function actionLogout()
     {
-        $user = \Yii::$app->user->identity;
+        $identity = \Yii::$app->user->identity->getId();
 
-        $user->access_token = null;
-
-        return $user->save();
+        return User::updateAll(['access_token' => null], ['id' => $identity]);
     }
 }
