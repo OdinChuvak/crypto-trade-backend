@@ -25,7 +25,11 @@ class AuthenticationController extends BaseApiController
         $user->access_token = 'dfhasiufg;sdfuhiUFH;Dsgfuds;FGD;IS';
 
         if ($user->save()) {
-            return $user->access_token;
+            return [
+                'id' => $user->id,
+                'email' => $user->email,
+                'access_token' => $user->access_token,
+            ];
         } else {
             throw new UnauthorizedHttpException();
         }

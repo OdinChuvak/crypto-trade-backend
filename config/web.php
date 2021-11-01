@@ -57,7 +57,7 @@ $config = [
                         'trading-grid',
                         'currency-pair',
                         'order',
-                        'authentication',
+                        'auth',
                     ],
                     'pluralize' => false
                 ],
