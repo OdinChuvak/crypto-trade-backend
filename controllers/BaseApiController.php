@@ -12,13 +12,18 @@ class BaseApiController extends ActiveController
     {
         $behaviors = parent::behaviors();
 
+        /* В родителе задан аутентификатор. Удалим его, чтобы
+           заголовки Cors креплялись к ответу до проверки авторизации,
+           а ниже установим собственный аунтентификатор */
+        unset($behaviors['authenticator']);
+
         $behaviors['corsFilter'] = [
             'class' => Cors::class,
         ];
 
         $behaviors['authenticator'] = [
             'class' => HttpBearerAuth::class,
-            'except' => ['login'],
+            'except' => ['options', 'login'],
         ];
 
         return $behaviors;
