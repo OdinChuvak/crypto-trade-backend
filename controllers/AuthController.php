@@ -5,7 +5,7 @@ namespace app\controllers;
 use app\models\User;
 use yii\web\UnauthorizedHttpException;
 
-class AuthenticationController extends BaseApiController
+class AuthController extends BaseApiController
 {
     public $modelClass = User::class;
 
@@ -28,7 +28,7 @@ class AuthenticationController extends BaseApiController
             return [
                 'id' => $user->id,
                 'email' => $user->email,
-                'access_token' => $user->access_token,
+                'token' => $user->access_token,
             ];
         } else {
             throw new UnauthorizedHttpException();
