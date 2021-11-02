@@ -14,6 +14,7 @@ class m211021_201642_trading_grid_table extends Migration
     {
         $this->createTable('trading_grid', [
             'id' => $this->primaryKey(),
+            'user_id' => $this->integer()->notNull(),
             'pair_id' => $this->integer()->notNull(),
             'order_step' => $this->integer()->notNull(),
             'order_amount' => $this->float()->notNull(),

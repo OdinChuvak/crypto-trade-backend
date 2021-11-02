@@ -14,6 +14,7 @@ class m211021_203148_order_table extends Migration
     {
         $this->createTable('order', [
             'id' => $this->primaryKey(),
+            'user_id' => $this->integer()->notNull(),
             'exmo_order_id' => $this->integer()->null(),
             'trading_grid_id' => $this->integer()->notNull(),
             'previous_order_id' => $this->integer()->null(),
