@@ -6,6 +6,12 @@ use app\models\CurrencyPair;
 use \yii\console\Controller;
 use linslin\yii2\curl\Curl;
 
+/**
+ * Class CurrencyPairUpdateController
+ * @package app\commands
+ *
+ * Обновляет список валютных пар в таблице currency_pair
+ */
 class CurrencyPairUpdateController extends Controller
 {
     public function actionIndex()
