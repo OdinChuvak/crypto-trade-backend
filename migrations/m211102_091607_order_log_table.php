@@ -19,6 +19,7 @@ class m211102_091607_order_log_table extends Migration
             'order_id' => $this->integer()->notNull(),
             'type' => $this->string(24)->notNull(),
             'message' => $this->string(512)->notNull(),
+            'error_code' => $this->integer()->null(),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);
     }
