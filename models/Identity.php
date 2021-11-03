@@ -6,9 +6,6 @@ use yii\web\IdentityInterface;
 
 class Identity extends User implements IdentityInterface
 {
-    public $id;
-    public $access_token;
-
     public static function findIdentity($id)
     {
         return self::findOne(['id' => $id]);
