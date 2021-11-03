@@ -14,7 +14,35 @@ class Order extends ActiveRecord
     public function rules()
     {
         return [
-            [['trading_grid_id', 'operation', 'required_trading_rate'], 'required', 'message' => 'The value cannot be empty.'],
+            ['user_id', 'default', 'value' => \Yii::$app->user->getId()],
+            [
+                [
+                    'trading_grid_id',
+                    'operation',
+                    'required_trading_rate'
+                ],
+                'required',
+                'message' => 'The value cannot be empty.',
+            ],
+            [
+                [
+                    'is_error',
+                    'is_placed',
+                    'is_archived'
+                ],
+                'boolean',
+                'message' => 'This boolean value.'
+            ]
         ];
+    }
+
+    public function getGrid()
+    {
+        return $this->hasOne(TradingGrid::class, ['id' => 'trading_grid_id']);
+    }
+
+    public function getPair()
+    {
+        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('grid');
     }
 }

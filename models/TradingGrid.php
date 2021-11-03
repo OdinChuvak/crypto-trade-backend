@@ -14,7 +14,16 @@ class TradingGrid extends ActiveRecord
     public function rules()
     {
         return [
-            [['pair_id', 'order_step', 'order_amount'], 'required', 'message' => 'The value cannot be empty.'],
+            ['user_id', 'default', 'value' => \Yii::$app->user->getId()],
+            [
+                [
+                    'pair_id',
+                    'order_step',
+                    'order_amount'
+                ],
+                'required',
+                'message' => 'The value cannot be empty.'
+            ],
         ];
     }
 
