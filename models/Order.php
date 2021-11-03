@@ -27,8 +27,7 @@ class Order extends ActiveRecord
             [
                 [
                     'is_error',
-                    'is_placed',
-                    'is_archived'
+                    'is_placed'
                 ],
                 'boolean',
                 'message' => 'This boolean value.'

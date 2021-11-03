@@ -24,6 +24,7 @@ class TradingGrid extends ActiveRecord
                 'required',
                 'message' => 'The value cannot be empty.'
             ],
+            ['is_archived', 'boolean', 'message' => 'This boolean value.']
         ];
     }
 
