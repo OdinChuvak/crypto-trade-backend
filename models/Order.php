@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\helpers\FunctionBox;
 use yii\db\ActiveRecord;
 
 class Order extends ActiveRecord
@@ -14,7 +15,7 @@ class Order extends ActiveRecord
     public function rules()
     {
         return [
-            ['user_id', 'default', 'value' => \Yii::$app->user->getId()],
+            ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
             [
                 [
                     'trading_grid_id',

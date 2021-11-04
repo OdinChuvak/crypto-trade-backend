@@ -5,11 +5,11 @@ namespace app\models;
 use app\helpers\FunctionBox;
 use yii\db\ActiveRecord;
 
-class OrderLog extends ActiveRecord
+class UserLog extends ActiveRecord
 {
     public static function tableName()
     {
-        return 'order_log';
+        return 'user_log';
     }
 
     public function rules()
@@ -18,13 +18,13 @@ class OrderLog extends ActiveRecord
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
             [
                 [
-                    'order_id',
                     'type',
                     'message'
                 ],
                 'required',
                 'message' => 'The value cannot be empty.',
             ],
+            ['error_code', 'integer'],
         ];
     }
 }
