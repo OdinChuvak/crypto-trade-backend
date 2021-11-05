@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\helpers\AppError;
 use app\helpers\FunctionBox;
 use yii\db\ActiveRecord;
 
@@ -34,6 +35,48 @@ class Order extends ActiveRecord
                 'message' => 'This boolean value.'
             ]
         ];
+    }
+
+    public static function getQuantity($order_id)
+    {
+        $order = self::find()
+            ->with('grid')
+            ->where(['id' => $order_id])
+            ->one();
+
+        $previousOrder = self::find()
+            ->with('grid')
+            ->where(['id' => $order->previous_order_id])
+            ->one();
+
+        $grid = $order->grid;
+
+        if (empty($previousOrder)) {
+            return round($grid->order_amount / $order->required_trading_rate, 7);
+        }
+
+        if ($order->operation === $previousOrder->operation) {
+            return null;
+        }
+
+        if ($grid->trading_method === 1) {
+            return $order->operation === 'buy'
+                ? round($previousOrder->received / $order->required_trading_rate, 7)
+                : $previousOrder->received;
+        }
+        elseif ($grid->trading_method === 2) {
+            return $order->operation === 'buy'
+                ? round($grid->order_amount / $order->required_trading_rate, 7)
+                : $previousOrder->received;
+        }
+        elseif ($grid->trading_method === 3) {
+            return $order->operation === 'buy'
+                ? round($previousOrder->received / $order->required_trading_rate, 7)
+                : round($grid->order_amount / $previousOrder->required_trading_rate, 7);
+        }
+        else {
+            return null;
+        }
     }
 
     public function getGrid()
