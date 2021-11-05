@@ -3,9 +3,8 @@
 namespace app\models;
 
 use app\helpers\FunctionBox;
-use yii\db\ActiveRecord;
 
-class OrderLog extends ActiveRecord
+class OrderLog extends BaseModel
 {
     public static function tableName()
     {
@@ -25,6 +24,7 @@ class OrderLog extends ActiveRecord
                 'required',
                 'message' => 'The value cannot be empty.',
             ],
+            ['error_code', 'integer'],
         ];
     }
 }

@@ -3,9 +3,8 @@
 namespace app\models;
 
 use app\helpers\FunctionBox;
-use yii\db\ActiveRecord;
 
-class UserLog extends ActiveRecord
+class UserLog extends BaseModel
 {
     public static function tableName()
     {
