@@ -20,12 +20,30 @@ class AppError
     ];
 
     /**
-     * Ошибка аутентификации
+     * Неверный ключ API
      */
-    const AUTH_ERROR = [
+    const WRONG_API_KEY = [
         'code' => 1001,
         'type' => 'error',
-        'message' => 'Authentication error'
+        'message' => 'Wrong api key'
+    ];
+
+    /**
+     * Неверная подпись
+     */
+    const INCORRECT_SIGNATURE = [
+        'code' => 1002,
+        'type' => 'error',
+        'message' => 'Incorrect signature'
+    ];
+
+    /**
+     * Ошибка аутентификации
+     */
+    const KEY_IS_NOT_ACTIVATED = [
+        'code' => 1003,
+        'type' => 'error',
+        'message' => 'Access is denied, API key is not activated'
     ];
 
     /**
@@ -36,4 +54,33 @@ class AppError
         'type' => 'error',
         'message' => 'There are not enough funds on the account to complete the operation'
     ];
+
+    /**
+     * Количество закупаемой валюты меньше допустимого минимума
+     */
+    const QUANTITY_LESS = [
+        'code' => 2002,
+        'type' => 'error',
+        'message' => 'Quantity by order is less than permissible minimum for this pair'
+    ];
+
+    /**
+     * Неизвестная ошибка
+     */
+    const UNKNOWN_ERROR = [
+        'code' => 9999,
+        'type' => 'error',
+        'message' => 'Unknown error'
+    ];
+
+    public static function errorMap()
+    {
+        return [
+            '40005' => self::INCORRECT_SIGNATURE,
+            '40017' => self::WRONG_API_KEY,
+            '40030' => self::KEY_IS_NOT_ACTIVATED,
+            '50054' => self::INSUFFICIENT_FUNDS,
+            '50277' => self::QUANTITY_LESS,
+        ];
+    }
 }
