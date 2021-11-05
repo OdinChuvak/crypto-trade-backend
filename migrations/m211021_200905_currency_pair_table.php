@@ -17,6 +17,12 @@ class m211021_200905_currency_pair_table extends Migration
             'name' => $this->string(15)->unique()->notNull(),
             'first_currency' => $this->string(15)->notNull(),
             'second_currency' => $this->string(15)->notNull(),
+            'min_quantity' => $this->double()->notNull(),
+            'max_quantity' => $this->double()->notNull(),
+            'min_price' => $this->double()->notNull(),
+            'max_price' => $this->double()->notNull(),
+            'min_amount' => $this->double()->notNull(),
+            'max_amount' => $this->double()->notNull(),
         ]);
     }
 

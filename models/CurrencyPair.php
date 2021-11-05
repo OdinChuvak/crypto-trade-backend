@@ -14,7 +14,25 @@ class CurrencyPair extends ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'first_currency', 'second_currency'], 'string']
+            [
+                [
+                    'name',
+                    'first_currency',
+                    'second_currency'
+                ],
+                'string'
+            ],
+            [
+                [
+                    'min_quantity',
+                    'max_quantity',
+                    'min_price',
+                    'max_price',
+                    'min_amount',
+                    'max_amount',
+                ],
+                'required'
+            ]
         ];
     }
 }
