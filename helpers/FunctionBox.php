@@ -18,6 +18,6 @@ class FunctionBox
      */
     public static function getIdentityId()
     {
-        return property_exists(\Yii::$app, 'user') ? \Yii::$app->user->getId() : null;
+        return isset(\Yii::$app->user) ? \Yii::$app->user->getId() : null;
     }
 }
