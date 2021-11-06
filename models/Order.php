@@ -21,11 +21,13 @@ class Order extends ActiveRecord
                 [
                     'trading_grid_id',
                     'operation',
-                    'required_trading_rate'
+                    'required_trading_rate',
+                    'user_id',
                 ],
                 'required',
                 'message' => 'The value cannot be empty.',
             ],
+            ['required_trading_rate', 'admissibleExchangeRate'],
             [
                 [
                     'is_error',
@@ -35,6 +37,18 @@ class Order extends ActiveRecord
                 'message' => 'This boolean value.'
             ]
         ];
+    }
+
+    public function admissibleExchangeRate()
+    {
+        $grid = TradingGrid::findOne(['id' => $this->trading_grid_id]);
+        $pair = CurrencyPair::findOne(['id' => $grid->pair_id]);
+
+        if (!($this->required_trading_rate >= $pair->min_price
+            && $this->required_trading_rate <= $pair->max_price)) {
+            $errorMsg = 'Invalid value for the currency rate. Acceptable rate values are from '.$pair->min_price.' to '.$pair->max_price.'.';
+            $this->addError('required_trading_rate', $errorMsg);
+        }
     }
 
     public static function getQuantity($order_id)
