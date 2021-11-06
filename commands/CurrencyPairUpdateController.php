@@ -10,36 +10,36 @@ use linslin\yii2\curl\Curl;
  * Class CurrencyPairUpdateController
  * @package app\commands
  *
- * Обновляет список валютных пар в таблице currency_pair
+ * Обновляет список валютных пар в таблице currency_pair и настроек лимитов по ним
  */
 class CurrencyPairUpdateController extends Controller
 {
     public function actionIndex()
     {
         $curl = new Curl();
-        $response = $curl->get('https://api.exmo.com/v1.1/ticker');
+        $response = $curl->get('https://api.exmo.com/v1.1/pair_settings');
 
         if ($curl->errorCode !== null) {
-            exit('Error ' . $curl->errorCode . ':' . $curl->errorText);
+            \Yii::error('Error ' . $curl->errorCode . ': ' . $curl->errorText, __METHOD__);
+            exit();
         }
 
         $data = json_decode($response, true);
 
-        foreach ($data as $currencyPair => $info)
+        foreach ($data as $currencyPair => $pairData)
         {
             $pair = explode('_', $currencyPair);
 
-            $pairModel = CurrencyPair::findOne(['first_currency' => $pair[0], 'second_currency' => $pair[1]]);
+            $pairData['name'] = $pair[0].'/'.$pair[1];
+            $pairData['first_currency'] = $pair[0];
+            $pairData['second_currency'] = $pair[1];
 
-            if (!$pairModel)
-            {
-                $pairModel = new CurrencyPair();
+            $pairModel = CurrencyPair::findOne([
+                'first_currency' => $pair[0],
+                'second_currency' => $pair[1]]) ?: new CurrencyPair();
 
-                $pairModel->name = $pair[0].'/'.$pair[1];
-                $pairModel->first_currency = $pair[0];
-                $pairModel->second_currency = $pair[1];
-
-                $pairModel->save();
+            if (!($pairModel->load($pairData, '') && $pairModel->save())) {
+                \Yii::error('Error saving data of the ' . $pairData['name'] . ' currency pair to the database', __METHOD__);
             }
         }
     }
