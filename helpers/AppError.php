@@ -65,6 +65,15 @@ class AppError
     ];
 
     /**
+     * Ордер не найден
+     */
+    const ORDER_NOT_FOUND = [
+        'code' => 2004,
+        'type' => 'error',
+        'message' => 'Order was not found'
+    ];
+
+    /**
      * Неизвестная ошибка
      */
     const UNKNOWN_ERROR = [
@@ -81,6 +90,7 @@ class AppError
             '40030' => self::KEY_IS_NOT_ACTIVATED,
             '50054' => self::INSUFFICIENT_FUNDS,
             '50277' => self::QUANTITY_LESS,
+            '50304' => self::ORDER_NOT_FOUND,
         ];
     }
 }
