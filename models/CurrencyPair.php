@@ -30,6 +30,7 @@ class CurrencyPair extends ActiveRecord
                     'max_price',
                     'min_amount',
                     'max_amount',
+                    'price_precision',
                 ],
                 'required'
             ]

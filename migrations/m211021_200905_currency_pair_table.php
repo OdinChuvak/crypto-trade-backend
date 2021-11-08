@@ -23,6 +23,7 @@ class m211021_200905_currency_pair_table extends Migration
             'max_price' => $this->double()->notNull(),
             'min_amount' => $this->double()->notNull(),
             'max_amount' => $this->double()->notNull(),
+            'price_precision' => $this->tinyInteger()->notNull(),
         ]);
     }
 
