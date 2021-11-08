@@ -31,6 +31,17 @@ class Order extends ActiveRecord
             ['required_trading_rate', 'allowedQuantity'],
             [
                 [
+                    'required_trading_rate',
+                    'actual_trading_rate',
+                    'invested',
+                    'received',
+                    'commission_amount',
+                ],
+                'double',
+                'message' => 'The value must be a floating point number.',
+            ],
+            [
+                [
                     'is_error',
                     'is_placed'
                 ],

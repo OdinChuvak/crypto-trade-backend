@@ -23,6 +23,7 @@ class m211021_203148_order_table extends Migration
             'actual_trading_rate' => $this->float()->null(),
             'invested' => $this->float()->null(),
             'received' => $this->float()->null(),
+            'commission_amount' => $this->double()->null(),
             'is_placed' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'is_executed' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'is_error' => $this->tinyInteger(4)->notNull()->defaultValue(0),
