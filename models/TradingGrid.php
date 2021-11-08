@@ -25,6 +25,7 @@ class TradingGrid extends ActiveRecord
                 'required',
                 'message' => 'The value cannot be empty.'
             ],
+            ['order_amount', 'allowedAmount'],
             ['is_archived', 'boolean', 'message' => 'This boolean value.']
         ];
     }
@@ -34,6 +35,17 @@ class TradingGrid extends ActiveRecord
         return [
             'pair'
         ];
+    }
+
+    public function allowedAmount()
+    {
+        $pair = CurrencyPair::findOne(['id' => $this->pair_id]);
+
+        if (!($this->order_amount >= $pair->min_amount
+            && $this->order_amount <= $pair->max_amount)) {
+            $errorMsg = 'Invalid value for the amount field for the currency pair. The value must be between '.$pair->min_amount.' and '.$pair->max_amount.'.';
+            $this->addError('order_amount', $errorMsg);
+        }
     }
 
     public function getPair()
