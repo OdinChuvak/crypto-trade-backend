@@ -47,6 +47,15 @@ class AppError
     ];
 
     /**
+     * Ошибка параметра
+     */
+    const PARAMETER_ERROR = [
+        'code' => 1004,
+        'type' => 'error',
+        'message' => 'Parameter error'
+    ];
+
+    /**
      * Недостаточно средст
      */
     const INSUFFICIENT_FUNDS = [
@@ -88,9 +97,22 @@ class AppError
             '40005' => self::INCORRECT_SIGNATURE,
             '40017' => self::WRONG_API_KEY,
             '40030' => self::KEY_IS_NOT_ACTIVATED,
-            '50054' => self::INSUFFICIENT_FUNDS,
+            '50018' => self::PARAMETER_ERROR,
+            '50052' => self::INSUFFICIENT_FUNDS,
             '50277' => self::QUANTITY_LESS,
             '50304' => self::ORDER_NOT_FOUND,
         ];
+    }
+
+    public static function getMappingError($errorCode)
+    {
+        return self::errorMap()[$errorCode] ?: self::UNKNOWN_ERROR;
+    }
+
+    public static function getExmoErrorFromMessage($errorMessage)
+    {
+        preg_match('/\d{5}/', $errorMessage, $exmo_error_code);
+
+        return $exmo_error_code[0];
     }
 }
