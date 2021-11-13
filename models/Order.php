@@ -17,6 +17,7 @@ class Order extends ActiveRecord
     {
         return [
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
+            ['exmo_order_id', 'safe'],
             [
                 [
                     'trading_grid_id',
@@ -43,7 +44,8 @@ class Order extends ActiveRecord
             [
                 [
                     'is_error',
-                    'is_placed'
+                    'is_placed',
+                    'is_executed',
                 ],
                 'boolean',
                 'message' => 'This boolean value.'
