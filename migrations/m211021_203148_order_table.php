@@ -26,6 +26,7 @@ class m211021_203148_order_table extends Migration
             'commission_amount' => $this->double()->null(),
             'is_placed' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'is_executed' => $this->tinyInteger(4)->notNull()->defaultValue(0),
+            'is_continued' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'is_error' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);

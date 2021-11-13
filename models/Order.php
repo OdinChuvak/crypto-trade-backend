@@ -46,6 +46,7 @@ class Order extends ActiveRecord
                     'is_error',
                     'is_placed',
                     'is_executed',
+                    'is_continued',
                 ],
                 'boolean',
                 'message' => 'This boolean value.'
