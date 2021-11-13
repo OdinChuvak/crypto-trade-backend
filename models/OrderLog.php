@@ -17,6 +17,7 @@ class OrderLog extends BaseModel
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
             [
                 [
+                    'trading_grid_id',
                     'order_id',
                     'type',
                     'message'
