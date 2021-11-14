@@ -129,13 +129,11 @@ class OrderController extends Controller
 
                     /*
                      * Дописываем в ордер id ордера на бирже,
-                     * id предыдущего ордера в приложении,
                      * ставим метку о размещении и снимаем метку ошибки,
                      * на случай, если предыдущая попытка размещения была с ошибкой
                      * */
                     $orderCommon = [
                         'exmo_order_id' => $api['order_id'],
-                        'previous_order_id' => isset($orders[$key + 1]) ? $orders[$key + 1]->id : null,
                         'is_placed' => true,
                         'is_error' => false,
                     ];
@@ -384,22 +382,22 @@ class OrderController extends Controller
                     foreach ($orderTrades['trades'] as $trade) {
 
                         /*
-                         * TODO удалить через 3 месяца
-                         * Предполагается, что комиссия с продаж взимается с полученной валюты.
-                         * Но это не точно. Ососбенно, учитывая, что api возвращает поле с указанием
-                         * названия валюты, в которой взыскана комиссия - commission_currency.
-                         * Во избежание ошибок, в случае, если комиссия может удерживаться с любой валюты,
-                         * добавлю скрипт, который пометит ордер как ошибочный, и запишет лог, в случае,
-                         * если валюта комиссии окажется не равной валюте покупки.
-                         * (Чтобы знать, возможно ли такое)
-                         * */
-                        if ($trade['commission_currency'] != $order->pair->first_currency) {
-                            \Yii::error('Комиссия валюты не соответствует первой валюте пары! ' . '(Валюта комиссии - '.$trade['commission_currency'].', Первая валюта пары - '.$order->pair->first_currency.', Ордер - '.$order->id.')', __METHOD__);
-                        }
+                         * 'invested' и 'received', в зависимости от того, какая операция была произведена,
+                         * меняются местами. То есть, если в паре производится операция покупки 'buy',
+                         * то инвестируемыми считаются средства во второй валюте, а получаемыми - в первой.
+                         * В случае, если произведена операция продажи, то есть 'sell', инвестируемыми
+                         * будут считаться средства первой валюты, а получаемыми второй.
+                         *
+                         * Комиссия взимается с получаемой валюты
+                         */
 
                         $actual_trading_rate += $trade['price'];
-                        $invested += $trade['amount'];
-                        $received += $order->pair->first_currency === $trade['commission_currency'] ? $trade['quantity'] - $trade['commission_amount'] : $trade['quantity'];
+                        $invested += $order->operation === 'buy'
+                            ? $trade['amount']
+                            : $trade['quantity'];
+                        $received += $order->operation === 'buy'
+                            ? $trade['quantity'] - $trade['commission_amount']
+                            : $trade['amount'] - $trade['commission_amount'];
                         $commission += $trade['commission_amount'];
                         $k++;
                     }
@@ -435,6 +433,110 @@ class OrderController extends Controller
                     OrderLog::add($logData);
                 }
             }
+        }
+
+        return true;
+    }
+
+    /**
+     * Берет все ордера с параметрами:
+     *
+     *      [
+     *          '`order`.`is_executed`' => true,
+     *          '`order`.`is_continued`' => false,
+     *          '`trading_grid`.`is_archived`' => false
+     *      ],
+     *
+     * и создает для каждого такого ордера, следующий.
+     * Поле `is_continued` текущего ордера переключается при этом в true
+     *
+     * @return bool
+     */
+    public function actionContinuation()
+    {
+        /*
+         * Берем все исполненные, но не продолженные ордера
+         */
+        $orders = Order::find()
+            ->joinWith('grid')
+            ->where([
+                '`order`.`is_executed`' => true,
+                '`order`.`is_continued`' => false,
+            ])
+            ->andWhere(['`trading_grid`.`is_archived`' => false])
+            ->all();
+
+        /*
+         * Если исполненных, но не продолженных ордеров нет -
+         * завершим работу
+         */
+        if (!$orders) {
+            return true;
+        }
+
+        /*
+         * В противном случае, пройдемся по каждому такому ордеру
+         * и создадим для него ордер-продолжение
+         */
+        foreach ($orders as $order) {
+
+            $logData = [
+                'user_id' => $order->user_id,
+                'trading_grid_id' => $order->trading_grid_id,
+                'order_id' => $order->id,
+            ];
+
+            /*
+             * Определим операцию и курс для следующего ордера
+             * Операция должна быть противоположной к операции текущего ордера
+             * Курс высчитывается в зависимости от операции
+             * Если новый ордер выставляется на покупку, значит предыдущий был на продажу
+             * Соответственно вычисляем курс, прибавив к которому величину шага,
+             * мы получим курс текущего ордера
+             * Если новый ордер выставляется на покупку, то просто прибавляем к курсу
+             * текущего ордера величину шага в процентном значении
+             * */
+            $operation = $order->operation === 'buy' ? 'sell' : 'buy';
+            $required_trading_rate = $operation === 'buy'
+                ? ((100 * $order->required_trading_rate) / (100 + $order->grid->order_step))
+                : $order->required_trading_rate + ($order->required_trading_rate*$order->grid->order_step)/100;
+
+            /*
+             * Пишем данные нового ордера в массив
+             */
+            $nexOrderData = [
+                'user_id' => $order->user_id,
+                'trading_grid_id' => $order->trading_grid_id,
+                'previous_order_id' => $order->id,
+                'operation' => $operation,
+                'required_trading_rate' => $required_trading_rate,
+            ];
+
+            /*
+             * Если новый ордер успешно сохранен, добавим к текущему пометку `is_continued` = true
+             * */
+            $model = new Order();
+
+            if ($model->load($nexOrderData, '') && $model->save()) {
+                $order->is_continued = true;
+                $order->save();
+
+                $logData['type'] = 'success';
+                $logData['message'] = 'Order successfully continued';
+                $logData['error_code'] = null;
+
+            } else {
+                $order->is_error = true;
+                $order->save();
+
+                $errorMessage = $model->errors[array_key_first($model->errors)][0];
+
+                $logData['type'] = 'error';
+                $logData['message'] = $errorMessage;
+                $logData['error_code'] = null;
+            }
+
+            OrderLog::add($logData, '');
         }
 
         return true;
