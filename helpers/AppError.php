@@ -74,6 +74,15 @@ class AppError
     ];
 
     /**
+     * Количество закупаемой валюты меньше допустимого минимума
+     */
+    const QUANTITY_MORE = [
+        'code' => 2003,
+        'type' => 'error',
+        'message' => 'Quantity on order is greater than the maximum allowable for this pair'
+    ];
+
+    /**
      * Ордер не найден
      */
     const ORDER_NOT_FOUND = [
@@ -99,6 +108,7 @@ class AppError
             '40030' => self::KEY_IS_NOT_ACTIVATED,
             '50018' => self::PARAMETER_ERROR,
             '50052' => self::INSUFFICIENT_FUNDS,
+            '50054' => self::INSUFFICIENT_FUNDS,
             '50277' => self::QUANTITY_LESS,
             '50304' => self::ORDER_NOT_FOUND,
         ];
