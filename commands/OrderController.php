@@ -3,10 +3,14 @@
 namespace app\commands;
 
 use app\helpers\AppError;
+use app\models\CurrencyPair;
 use app\models\Order;
 use app\models\OrderLog;
+use app\models\TradingGrid;
+use app\models\TradingGridLog;
 use app\models\UserLog;
 use Exmo\Api\Request;
+use linslin\yii2\curl\Curl;
 
 class OrderController extends Controller
 {
@@ -299,8 +303,8 @@ class OrderController extends Controller
                  * */
                 if (!empty($activeOrders) && isset($activeOrders[$pairName])) {
                     foreach ($activeOrders[$pairName] as $activeOrder) {
-                        if ($order->exmo_order_id === $activeOrder['order_id']) {
-                            continue;
+                        if ($order->exmo_order_id == $activeOrder['order_id']) {
+                            continue 2;
                         }
                     }
                 }
@@ -476,10 +480,20 @@ class OrderController extends Controller
 
         /*
          * В противном случае, пройдемся по каждому такому ордеру
-         * и создадим для него ордер-продолжение
+         * и выполним нужные действия:
+         *
+         *  - если была выполнена операция покупки 'buy', то нам следует
+         * создать 2 новых ордера - ордер на продажу, связанный с текущим ордером покупки,
+         * и ордер на покупку по курсу ((курс покупки текущего ордера * 100) / (100 + шаг))
+         *  - если же была произведена операция продажи 'sell', нужно отменить все предыдущие
+         * ордера на покупку и создать новый ордер на покупку по курсу
+         * ((курс покупки текущего ордера * 100) / (100 + шаг)) и отменить предыдущий
          */
         foreach ($orders as $order) {
 
+            /*
+             * Сформируем общие данные для логов
+             * */
             $logData = [
                 'user_id' => $order->user_id,
                 'trading_grid_id' => $order->trading_grid_id,
@@ -487,56 +501,192 @@ class OrderController extends Controller
             ];
 
             /*
-             * Определим операцию и курс для следующего ордера
-             * Операция должна быть противоположной к операции текущего ордера
-             * Курс высчитывается в зависимости от операции
-             * Если новый ордер выставляется на покупку, значит предыдущий был на продажу
-             * Соответственно вычисляем курс, прибавив к которому величину шага,
-             * мы получим курс текущего ордера
-             * Если новый ордер выставляется на покупку, то просто прибавляем к курсу
-             * текущего ордера величину шага в процентном значении
+             * Если операция текущего ордера была покупка 'buy',
+             * нужно создать ордер на продажу 'sell',
+             * соответствующий ордеру покупки
              * */
-            $operation = $order->operation === 'buy' ? 'sell' : 'buy';
-            $required_trading_rate = $operation === 'buy'
-                ? ((100 * $order->required_trading_rate) / (100 + $order->grid->order_step))
-                : $order->required_trading_rate + ($order->required_trading_rate*$order->grid->order_step)/100;
+            if ($order->operation === 'buy') {
 
-            /*
-             * Пишем данные нового ордера в массив
-             */
-            $nexOrderData = [
-                'user_id' => $order->user_id,
-                'trading_grid_id' => $order->trading_grid_id,
-                'previous_order_id' => $order->id,
-                'operation' => $operation,
-                'required_trading_rate' => $required_trading_rate,
-            ];
+                /*
+                 * Сформируем данные ордера на продажу
+                 * */
+                $sellOrder = [
+                    'user_id' => $order->user_id,
+                    'trading_grid_id' => $order->trading_grid_id,
+                    'previous_order_id' => $order->id,
+                    'operation' => 'sell',
+                    'required_trading_rate' => round($order->required_trading_rate + ($order->required_trading_rate * $order->grid->order_step)/100, $order->pair->price_precision),
+                ];
 
-            /*
-             * Если новый ордер успешно сохранен, добавим к текущему пометку `is_continued` = true
-             * */
-            $model = new Order();
+                /*
+                 * Если ордер удалось сохранить, фиксируем, что текущий ордер
+                 * успешно продолжен. Иначе он снова попадет в обработку.
+                 * Если же сохранение не удалось, зафиксируем ошибку в текущем
+                 * ордере.
+                 */
+                if (Order::add($sellOrder, '')) {
 
-            if ($model->load($nexOrderData, '') && $model->save()) {
-                $order->is_continued = true;
-                $order->save();
+                    $order->is_continued = true;
+                    $order->is_error = false;
 
-                $logData['type'] = 'success';
-                $logData['message'] = 'Order successfully continued';
-                $logData['error_code'] = null;
+                    $logData['type'] = 'success';
+                    $logData['message'] = 'Order successfully continued';
+                    $logData['error_code'] = null;
 
-            } else {
-                $order->is_error = true;
-                $order->save();
+                    /*
+                     * Сохраняем текущий ордер и пишем лог
+                     */
+                    $order->save();
+                    OrderLog::add($logData, '');
 
-                $errorMessage = $model->errors[array_key_first($model->errors)][0];
+                    /*
+                     * Если все пошло нормально, создадим новый ордер на покупку
+                     */
+                    $newBuyOrder = [
+                        'user_id' => $order->user_id,
+                        'trading_grid_id' => $order->trading_grid_id,
+                        'operation' => 'buy',
+                        'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
+                    ];
 
-                $logData['type'] = 'error';
-                $logData['message'] = $errorMessage;
-                $logData['error_code'] = null;
+                    Order::add($newBuyOrder, '');
+
+                } else {
+
+                    $order->is_error = true;
+
+                    $error = AppError::SELL_ORDER_CREATION_PROBLEM;
+
+                    $logData['type'] = $error['type'];
+                    $logData['message'] = $error['message'];
+                    $logData['error_code'] = $error['error_code'];
+
+                    /*
+                     * Сохраняем текущий ордер и пишем лог
+                     */
+                    $order->save();
+                    OrderLog::add($logData, '');
+                }
             }
+            /*
+             * Если операция текущего ордера была продажа 'sell',
+             * отменим ранее шедшие ордера на покупку, чтобы создать новый,
+             * по актуальному курсу
+             * */
 
-            OrderLog::add($logData, '');
+            else {
+
+                /*
+                 * Берем все предыдущие активные ордера,
+                 * чтобы отменить их на бирже и удалить с нашей БД
+                 */
+                $lastActiveOrders = Order::find()
+                    ->where([
+                        'AND',
+                        [
+                            '`order`.`trading_grid_id`' => $order->trading_grid_id,
+                            '`order`.`is_placed`' => true,
+                            '`order`.`is_executed`' => false,
+                            '`order`.`operation`' => 'buy'
+                        ],
+                        ['<', '`order`.`required_trading_rate`', $order->required_trading_rate]
+                    ])
+                    ->all();
+
+                if ($lastActiveOrders) {
+
+                    /*
+                     * Получаем ключи доступа из класса зашитого в ядро PHP
+                     * */
+                    $key = new \Key($order->user_id);
+
+                    /*
+                     * Если ключи доступа для данного юзера не обнаружены,
+                     * запишем лог ошибки и перейдем к следующему
+                     */
+                    if (!$key->is_find) {
+
+                        $error = AppError::NO_AUTH_KEY_FILE;
+
+                        $logData = [
+                            'user_id' => $order->user_id,
+                            'type' => $error['type'],
+                            'message' => $error['message'],
+                            'error_code' => $error['code'],
+                        ];
+
+                        UserLog::add($logData);
+
+                        continue;
+                    }
+
+                    /*
+                     * Создаем объект для работы с api биржи Exmo
+                     */
+                    $_EXMO = new Request($key->public, $key->secret);
+
+                    foreach($lastActiveOrders as $lastActiveOrder) {
+
+                        /*
+                         * Шлем запрос на отмену ордера
+                         */
+                        $orderCancel = $_EXMO->query(
+                            'order_cancel',
+                            [
+                                'order_id' => $lastActiveOrder->exmo_order_id
+                            ]);
+
+                        /*
+                         * Если ордер успешно отменен на бирже, удаляем его из нашей БД
+                         */
+                        if ($orderCancel['result']) {
+                            Order::deleteAll(['id' => $lastActiveOrder->id]);
+                        }
+                    }
+                }
+
+                /*
+                 * Создаем новый ордер на покупку
+                 */
+                $newBuyOrder = [
+                    'user_id' => $order->user_id,
+                    'trading_grid_id' => $order->trading_grid_id,
+                    'operation' => 'buy',
+                    'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
+                ];
+
+                if (Order::add($newBuyOrder, '')) {
+
+                    /*
+                     * В случае успеха фиксируем текущий ордер, как продолженный
+                     */
+                    $order->is_continued = true;
+                    $order->is_error = false;
+
+                    $logData['type'] = 'success';
+                    $logData['message'] = 'Order successfully continued';
+                    $logData['error_code'] = null;
+
+                } else {
+
+                    /*
+                     * Иначе фиксируем ошибку
+                     */
+                    $order->is_error = true;
+
+                    $error = AppError::BUY_ORDER_CREATION_PROBLEM;
+
+                    $logData['type'] = $error['type'];
+                    $logData['message'] = $error['message'];
+                    $logData['error_code'] = $error['error_code'];
+                }
+
+                /*
+                 * Сохраняем текущий ордер и пишем лог
+                 */
+                $order->save();
+                OrderLog::add($logData, '');
+            }
         }
 
         return true;
