@@ -411,8 +411,8 @@ class OrderController extends Controller
                      */
                     $orderCommon = [
                         'actual_trading_rate' => round($actual_trading_rate / $k, $order->pair->price_precision),
-                        'invested' => round($invested / $k, $order->pair->price_precision),
-                        'received' => round($received / $k, $order->pair->price_precision),
+                        'invested' => round($invested, $order->pair->price_precision),
+                        'received' => round($received, $order->pair->price_precision),
                         'commission_amount' => round($commission / $k, $order->pair->price_precision),
                         'is_executed' => true,
                         'is_error' => false,
