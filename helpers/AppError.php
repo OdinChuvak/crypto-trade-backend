@@ -92,6 +92,24 @@ class AppError
     ];
 
     /**
+     * Проблема создания ордера на покупку
+     */
+    const BUY_ORDER_CREATION_PROBLEM = [
+        'code' => 2005,
+        'type' => 'error',
+        'message' => 'Unable to create purchase order'
+    ];
+
+    /**
+     * Проблема создания ордера на продажу
+     */
+    const SELL_ORDER_CREATION_PROBLEM = [
+        'code' => 2006,
+        'type' => 'error',
+        'message' => 'Unable to create sales order'
+    ];
+
+    /**
      * Неизвестная ошибка
      */
     const UNKNOWN_ERROR = [
