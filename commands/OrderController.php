@@ -459,7 +459,12 @@ class OrderController extends Controller
     public function actionContinuation()
     {
         /*
-         * Берем все исполненные, но не продолженные ордера
+         * Берем все исполненные, но не продолженные ордера.
+         * В данном запросе важно сохранять сортировку по возрастанию,
+         * для поля required_trading_rate. Если ее убрать, реакцией на
+         * исполненные ордера с операцией 'sell', может стать несколько
+         * созданных операций 'buy', хотя по факту, в активном состоянии
+         * достаточно всего одной такой операции.
          */
         $orders = Order::find()
             ->joinWith('grid')
@@ -468,6 +473,7 @@ class OrderController extends Controller
                 '`order`.`is_continued`' => false,
             ])
             ->andWhere(['`trading_grid`.`is_archived`' => false])
+            ->orderBy('required_trading_rate')
             ->all();
 
         /*
@@ -577,7 +583,7 @@ class OrderController extends Controller
             else {
 
                 /*
-                 * Берем все предыдущие активные ордера,
+                 * Берем все предыдущие активные ордера на покупку,
                  * чтобы отменить их на бирже и удалить с нашей БД
                  */
                 $lastActiveOrders = Order::find()
