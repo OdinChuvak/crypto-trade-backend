@@ -12,6 +12,31 @@ class Order extends BaseModel
         return 'order';
     }
 
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID ордера',
+            'user_id' => 'ID пользователя',
+            'exmo_order_id' => 'ID ордера на криптовалютной бирже EXMO',
+            'trading_grid_id' => 'ID сетки ордера',
+            'previous_order_id' => 'ID предыдущего ордера',
+            'operation' => 'Операция производимая посредством ордера',
+            'required_trading_rate' => 'Требуемый курс валюты для исполнения ордера',
+            'actual_trading_rate' => 'Реальный курс исполнения ордера',
+            'invested' => 'Инвестированная сумма',
+            'received' => 'Полученная сумма',
+            'commission_amount' => 'Размер комиссии',
+            'is_placed' => 'Размещен на бирже',
+            'is_executed' => 'Исполнен',
+            'is_continued' => 'Был продолжен',
+            'is_error' => 'Возникла ошибка',
+            'is_canceled' => 'Отменен',
+            'created_at' => 'Время создания ордера в приложении',
+            'placed_at' => 'Время размещения ордера',
+            'executed_at' => 'Время исполнения ордера',
+        ];
+    }
+
     public function rules()
     {
         return [
@@ -21,6 +46,9 @@ class Order extends BaseModel
                     'id',
                     'exmo_order_id',
                     'previous_order_id',
+                    'created_at',
+                    'placed_at',
+                    'executed_at',
                 ],
                 'safe'
             ],
@@ -53,6 +81,7 @@ class Order extends BaseModel
                     'is_placed',
                     'is_executed',
                     'is_continued',
+                    'is_canceled',
                 ],
                 'boolean',
                 'message' => 'This boolean value.'
