@@ -4,7 +4,6 @@ namespace app\actions;
 
 use Yii;
 use yii\data\ActiveDataProvider;
-use yii\data\Pagination;
 
 class IndexAction extends \yii\rest\IndexAction
 {
@@ -34,6 +33,7 @@ class IndexAction extends \yii\rest\IndexAction
         $modelClass = $this->modelClass;
 
         $query = $modelClass::find();
+
         if (!empty($filter)) {
             $query->andWhere($filter);
         }
@@ -42,7 +42,7 @@ class IndexAction extends \yii\rest\IndexAction
         }
 
         return Yii::createObject([
-            'class' => ActiveDataProvider::className(),
+            'class' => ActiveDataProvider::class,
             'query' => $query,
             'pagination' => [
                 'pageSizeParam' => 'pageSize',
