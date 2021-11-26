@@ -2,7 +2,6 @@
 
 namespace app\models;
 
-use app\helpers\AppError;
 use app\helpers\FunctionBox;
 
 class Order extends BaseModel
@@ -211,43 +210,6 @@ class Order extends BaseModel
         else {
             return null;
         }
-    }
-
-    public static function add($data, $formName = '')
-    {
-        $model = new self();
-
-        if ($model->load($data, $formName) && $model->save()) {
-
-            $logData = [
-                'user_id' => $model->user_id,
-                'trading_grid_id' => $model->trading_grid_id,
-                'order_id' => $model->id,
-                'type' => 'success',
-                'message' => 'Order successfully created',
-                'error_code' => null,
-            ];
-
-            OrderLog::add($logData, '');
-
-            return true;
-        }
-
-        $error = $data['operation'] === 'buy'
-            ? AppError::BUY_ORDER_CREATION_PROBLEM
-            : AppError::SELL_ORDER_CREATION_PROBLEM;
-
-        $logData = [
-            'user_id' => $model->user_id,
-            'trading_grid_id' => $model->trading_grid_id,
-            'type' => $error['type'],
-            'message' => $error['message'],
-            'error_code' => $error['code'],
-        ];
-
-        TradingGridLog::add($logData, '');
-
-        return false;
     }
 
     public function getGrid()
