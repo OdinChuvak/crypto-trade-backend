@@ -93,7 +93,7 @@ class Exmo
         // генерируем заголовки
         $headers = [
             'Sign: ' . $sign,
-            'Key: ' . $this->userKeys->key
+            'Key: ' . $this->userKeys->public
         ];
 
         // our curl handle (initialize if required)

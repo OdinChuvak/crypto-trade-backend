@@ -94,7 +94,7 @@ class OrderController extends \yii\console\Controller
                     $order->exmo_order_id = $api['order_id'];
                     $order->is_placed = true;
                     $order->is_error = false;
-                    $order->placed_at = time();
+                    $order->placed_at = date("Y-m-d H:i:s");
 
                     /**
                      * Сохраняем ордер и пишем лог
