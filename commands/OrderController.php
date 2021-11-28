@@ -237,7 +237,7 @@ class OrderController extends \yii\console\Controller
                  * Если ордера нет в списке активных ордеров,
                  * пытаемся получить список продаж по ордеру
                  */
-                $orderTrades = $orderRepo->exmo->getOrderTrades($order->id);
+                $orderTrades = $orderRepo->exmo->getOrderTrades($order->exmo_order_id);
 
                 if (isset($orderTrades['result']) && !$orderTrades['result']) {
 
@@ -321,7 +321,7 @@ class OrderController extends \yii\console\Controller
                         'commission_amount' => round($commission / $k, $order->pair->price_precision),
                         'is_executed' => true,
                         'is_error' => false,
-                        'executed_at' => time(),
+                        'executed_at' => date("Y-m-d H:i:s"),
                     ];
 
                     $order->load($executionData, '');
@@ -428,14 +428,14 @@ class OrderController extends \yii\console\Controller
                     'user_id' => $order->user_id,
                     'trading_grid_id' => $order->trading_grid_id,
                     'operation' => 'buy',
-                    'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
+                    'required_trading_rate' => round(($order->actual_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
                 ], '');
 
                 $orderRepo->createOrder([
                     'user_id' => $order->user_id,
                     'trading_grid_id' => $order->trading_grid_id,
                     'operation' => 'sell',
-                    'required_trading_rate' => round($order->required_trading_rate + ($order->required_trading_rate * $order->grid->order_step) / 100, $order->pair->price_precision),
+                    'required_trading_rate' => round($order->actual_trading_rate + ($order->actual_trading_rate * $order->grid->order_step) / 100, $order->pair->price_precision),
                 ], '');
 
                 /**

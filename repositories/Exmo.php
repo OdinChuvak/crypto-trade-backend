@@ -50,7 +50,9 @@ class Exmo
      */
     public function cancelOrder($order_id)
     {
-        return $this->sendQuery('order_cancel', $order_id);
+        return $this->sendQuery('order_cancel', [
+            'order_id' => $order_id
+        ]);
     }
 
     /**

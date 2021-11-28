@@ -59,7 +59,6 @@ class Order
                 '`order`.`is_executed`' => false,
                 '`order`.`is_canceled`' => false,
             ])
-            ->andWhere(['`trading_grid`.`is_archived`' => false])
             ->all();
 
         /**
