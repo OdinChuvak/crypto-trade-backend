@@ -3,8 +3,6 @@
 namespace app\repositories;
 
 use app\helpers\AppError;
-use app\models\Order;
-use app\models\UserLog;
 use Exception;
 
 class Exmo
@@ -94,8 +92,9 @@ class Exmo
 
         // генерируем заголовки
         $headers = [
+            'Content-length: 300',
             'Sign: ' . $sign,
-            'Key: ' . $this->userKeys->public
+            'Key: ' . $this->userKeys->public,
         ];
 
         // our curl handle (initialize if required)
@@ -108,7 +107,7 @@ class Exmo
         curl_setopt($ch, CURLOPT_URL, $this->apiUrl . $api_name);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         // run the query
         $res = curl_exec($ch);

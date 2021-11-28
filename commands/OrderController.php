@@ -5,18 +5,31 @@ namespace app\commands;
 use app\helpers\AppError;
 use app\models\Order;
 use app\models\OrderLog;
-use app\models\UserLog;
-use Exmo\Api\Request;
 
 class OrderController extends \yii\console\Controller
 {
+    /**
+     * Поочередный запуск всех скриптов
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function actionIndex()
+    {
+        $this->placement();
+        $this->execution();
+        $this->extension();
+
+        return true;
+    }
+
     /**
      * Размещение ордера
      *
      * @return bool
      * @throws \Exception
      */
-    public function actionPlacement()
+    public function placement()
     {
         /**
          * Берем всех уникальных пользователей, у кого есть неразмещенные ордера
@@ -63,10 +76,10 @@ class OrderController extends \yii\console\Controller
                 ->joinWith('grid')
                 ->where([
                     '`order`.`user_id`' => $user->id,
-                    '`order`.`is_placed`' => false
+                    '`order`.`is_placed`' => false,
+                    '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere([
-                    '`order`.`is_canceled`' => false,
                     '`trading_grid`.`is_archived`' => false
                 ])
                 ->orderBy('created_at')
@@ -135,7 +148,7 @@ class OrderController extends \yii\console\Controller
                         'trading_grid_id' => $order->grid->id,
                         'order_id' => $order->id,
                         'type' => $error['type'],
-                        'message' => $error['message'],
+                        'message' => $error['message'].' '.$api['error'],
                         'error_code' => $error['error_code'],
                     ]);
                 }
@@ -151,7 +164,7 @@ class OrderController extends \yii\console\Controller
      * @return bool
      * @throws \Exception
      */
-    public function actionExecution()
+    public function execution()
     {
         /**
          * Берем всех уникальных пользователей,
@@ -202,7 +215,8 @@ class OrderController extends \yii\console\Controller
                 ->where([
                     '`order`.`user_id`' => $user->id,
                     '`order`.`is_placed`' => true,
-                    '`order`.`is_executed`' => false
+                    '`order`.`is_executed`' => false,
+                    '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere(['`trading_grid`.`is_archived`' => false])
                 ->orderBy('placed_at')
@@ -262,7 +276,7 @@ class OrderController extends \yii\console\Controller
                         'trading_grid_id' => $order->grid->id,
                         'order_id' => $order->id,
                         'type' => $error['type'],
-                        'message' => $error['message'],
+                        'message' => $error['message'].' '.$orderTrades['error'],
                         'error_code' => $error['code'],
                     ]);
 
@@ -351,7 +365,7 @@ class OrderController extends \yii\console\Controller
      * @return bool
      * @throws \Exception
      */
-    public function actionContinuation()
+    public function extension()
     {
         /**
          * Берем всех уникальных пользователей,
