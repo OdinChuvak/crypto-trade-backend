@@ -92,7 +92,6 @@ class Exmo
 
         // генерируем заголовки
         $headers = [
-            'Content-length: 300',
             'Sign: ' . $sign,
             'Key: ' . $this->userKeys->public,
         ];
