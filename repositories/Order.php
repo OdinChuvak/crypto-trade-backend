@@ -26,7 +26,7 @@ class Order
         /**
          * В случае ошибки $exmo = AppError::NO_AUTH_KEY_FILE
          */
-        if (isset($this->exmo['type']) && $this->exmo['type'] === 'error') {
+        if (gettype($this->exmo) === 'array' && isset($this->exmo['type']) && $this->exmo['type'] === 'error') {
 
             UserLog::add([
                 'user_id' => $user_id,
