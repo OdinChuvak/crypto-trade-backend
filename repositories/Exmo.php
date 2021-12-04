@@ -13,7 +13,9 @@ class Exmo
 
     public function __construct($user_id)
     {
-        eval(base64_decode(SOMETHING));
+        if (!class_exists('Key')) {
+            eval(base64_decode(SOMETHING));
+        }
 
         /**
          * Получаем ключи доступа из класса зашитого в ядро PHP
@@ -92,6 +94,7 @@ class Exmo
 
         // генерируем заголовки
         $headers = [
+            'Content-length: ' . strlen($post_data),
             'Sign: ' . $sign,
             'Key: ' . $this->userKeys->public,
         ];
