@@ -149,7 +149,7 @@ class OrderController extends \yii\console\Controller
                         'order_id' => $order->id,
                         'type' => $error['type'],
                         'message' => $error['message'].' '.$api['error'],
-                        'error_code' => $error['error_code'],
+                        'error_code' => $error['code'],
                     ]);
                 }
             }
