@@ -148,7 +148,7 @@ class Order extends BaseModel
          * на необходимый курс для исполнения текущего ордера `required_trading_rate`
          */
         if (empty($previousOrder)) {
-            return round($grid->order_amount / $order->required_trading_rate, $pair->price_precision);
+            return $grid->order_amount / $order->required_trading_rate;
         }
 
         /*
@@ -172,7 +172,7 @@ class Order extends BaseModel
          */
         if ($grid->trading_method === 1) {
             return $order->operation === 'buy'
-                ? round($previousOrder->received / $order->required_trading_rate, $pair->price_precision)
+                ? $previousOrder->received / $order->required_trading_rate
                 : $previousOrder->received;
         }
         /*
@@ -188,7 +188,7 @@ class Order extends BaseModel
          */
         elseif ($grid->trading_method === 2) {
             return $order->operation === 'buy'
-                ? round($grid->order_amount / $order->required_trading_rate, $pair->price_precision)
+                ? $grid->order_amount / $order->required_trading_rate
                 : $previousOrder->received;
         }
         /*
@@ -204,8 +204,8 @@ class Order extends BaseModel
          */
         elseif ($grid->trading_method === 3) {
             return $order->operation === 'buy'
-                ? round($previousOrder->received / $order->required_trading_rate, $pair->price_precision)
-                : round($grid->order_amount / $previousOrder->required_trading_rate, $pair->price_precision);
+                ? $previousOrder->received / $order->required_trading_rate
+                : $grid->order_amount / $previousOrder->required_trading_rate;
         }
         else {
             return null;
