@@ -4,9 +4,13 @@ namespace app\actions;
 
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\db\BaseActiveRecord;
 
 class IndexAction extends \yii\rest\IndexAction
 {
+    /**
+     * @throws \yii\base\InvalidConfigException
+     */
     protected function prepareDataProvider()
     {
         $requestParams = Yii::$app->getRequest()->getBodyParams();
@@ -29,7 +33,7 @@ class IndexAction extends \yii\rest\IndexAction
             return call_user_func($this->prepareDataProvider, $this, $filter);
         }
 
-        /* @var $modelClass \yii\db\BaseActiveRecord */
+        /* @var $modelClass BaseActiveRecord */
         $modelClass = $this->modelClass;
 
         $query = $modelClass::find();
@@ -47,7 +51,7 @@ class IndexAction extends \yii\rest\IndexAction
             'pagination' => [
                 'pageSizeParam' => 'pageSize',
                 'pageSizeLimit' => false,
-                'pageSize' => $requestParams['pageSize'],
+                'pageSize' => $requestParams['pageSize'] ?? 10,
             ],
             'sort' => [
                 'params' => $requestParams,

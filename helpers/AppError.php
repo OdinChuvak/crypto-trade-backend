@@ -118,7 +118,7 @@ class AppError
         'message' => 'Unknown error'
     ];
 
-    public static function errorMap()
+    public static function errorMap(): array
     {
         return [
             '40005' => self::INCORRECT_SIGNATURE,
@@ -132,9 +132,9 @@ class AppError
         ];
     }
 
-    public static function getMappingError($errorCode)
+    public static function getMappingError($errorCode): array
     {
-        return self::errorMap()[$errorCode] ?: self::UNKNOWN_ERROR;
+        return self::errorMap()[$errorCode] ?? self::UNKNOWN_ERROR;
     }
 
     public static function getExmoErrorFromMessage($errorMessage)

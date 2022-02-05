@@ -16,7 +16,7 @@ abstract class BaseModel extends ActiveRecord
      * @param string $formName
      * @return static
      */
-    public static function add($data, $formName = '')
+    public static function add($data, string $formName = ''): BaseModel
     {
         $model = new static();
 
