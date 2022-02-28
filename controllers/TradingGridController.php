@@ -3,11 +3,11 @@
 namespace app\controllers;
 
 use app\actions\IndexAction;
-use app\models\TradingGrid;
+use app\models\TradingLine;
 
 class TradingGridController extends BaseApiController
 {
-    public $modelClass = TradingGrid::class;
+    public $modelClass = TradingLine::class;
 
     public function actions()
     {

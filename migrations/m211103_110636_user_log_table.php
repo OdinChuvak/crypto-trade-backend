@@ -29,19 +29,4 @@ class m211103_110636_user_log_table extends Migration
     {
         $this->dropTable('user_log');
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m211103_110636_user_log_table cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }

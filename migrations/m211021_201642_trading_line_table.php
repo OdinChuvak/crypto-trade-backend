@@ -3,17 +3,18 @@
 use yii\db\Migration;
 
 /**
- * Class m211021_201642_trading_grid_table
+ * Class m211021_201642_trading_line_table
  */
-class m211021_201642_trading_grid_table extends Migration
+class m211021_201642_trading_line_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('trading_grid', [
+        $this->createTable('trading_line', [
             'id' => $this->primaryKey(),
+            'exchange_id' => $this->integer()->notNull(),
             'user_id' => $this->integer()->notNull(),
             'pair_id' => $this->integer()->notNull(),
             'order_step' => $this->integer()->notNull(),
@@ -29,21 +30,6 @@ class m211021_201642_trading_grid_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('trading_grid');
+        $this->dropTable('trading_line');
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m211021_201642_trading_grid_table cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }

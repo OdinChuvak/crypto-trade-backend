@@ -16,7 +16,7 @@ class AppError
     const NO_AUTH_KEY_FILE = [
         'code' => 1000,
         'type' => 'error',
-        'message' => 'No authentication key file'
+        'message' => 'Нет файла с ключами аутентификации'
     ];
 
     /**
@@ -25,7 +25,7 @@ class AppError
     const WRONG_API_KEY = [
         'code' => 1001,
         'type' => 'error',
-        'message' => 'Wrong api key'
+        'message' => 'Неправильный API-ключ'
     ];
 
     /**
@@ -34,7 +34,7 @@ class AppError
     const INCORRECT_SIGNATURE = [
         'code' => 1002,
         'type' => 'error',
-        'message' => 'Incorrect signature'
+        'message' => 'Неправильная подпись'
     ];
 
     /**
@@ -43,7 +43,7 @@ class AppError
     const KEY_IS_NOT_ACTIVATED = [
         'code' => 1003,
         'type' => 'error',
-        'message' => 'Access is denied, API key is not activated'
+        'message' => 'Доступ запрещен, ключ API не активирован'
     ];
 
     /**
@@ -52,7 +52,7 @@ class AppError
     const PARAMETER_ERROR = [
         'code' => 1004,
         'type' => 'error',
-        'message' => 'Parameter error'
+        'message' => 'Ошибка параметра'
     ];
 
     /**
@@ -61,7 +61,7 @@ class AppError
     const INSUFFICIENT_FUNDS = [
         'code' => 2001,
         'type' => 'error',
-        'message' => 'There are not enough funds on the account to complete the operation'
+        'message' => 'На счете недостаточно средств для совершения операции'
     ];
 
     /**
@@ -70,7 +70,7 @@ class AppError
     const QUANTITY_LESS = [
         'code' => 2002,
         'type' => 'error',
-        'message' => 'Quantity by order is less than permissible minimum for this pair'
+        'message' => 'Количество в ордере меньше допустимого минимума для этой пары'
     ];
 
     /**
@@ -79,7 +79,7 @@ class AppError
     const QUANTITY_MORE = [
         'code' => 2003,
         'type' => 'error',
-        'message' => 'Quantity on order is greater than the maximum allowable for this pair'
+        'message' => 'Количество в ордере больше максимально допустимого для данной пары'
     ];
 
     /**
@@ -88,7 +88,7 @@ class AppError
     const ORDER_NOT_FOUND = [
         'code' => 2004,
         'type' => 'error',
-        'message' => 'Order was not found'
+        'message' => 'Ордер не найден'
     ];
 
     /**
@@ -97,7 +97,7 @@ class AppError
     const BUY_ORDER_CREATION_PROBLEM = [
         'code' => 2005,
         'type' => 'error',
-        'message' => 'Unable to create purchase order'
+        'message' => 'Не удалось создать ордер на покупку'
     ];
 
     /**
@@ -106,7 +106,7 @@ class AppError
     const SELL_ORDER_CREATION_PROBLEM = [
         'code' => 2006,
         'type' => 'error',
-        'message' => 'Unable to create sales order'
+        'message' => 'Не удалось создать ордер на продажу'
     ];
 
     /**
@@ -115,7 +115,7 @@ class AppError
     const UNKNOWN_ERROR = [
         'code' => 9999,
         'type' => 'error',
-        'message' => 'Unknown error'
+        'message' => 'Неизвестная ошибка'
     ];
 
     public static function errorMap(): array
@@ -137,10 +137,10 @@ class AppError
         return self::errorMap()[$errorCode] ?? self::UNKNOWN_ERROR;
     }
 
-    public static function getExmoErrorFromMessage($errorMessage)
+    public static function getExchangeErrorFromMessage($errorMessage)
     {
-        preg_match('/\d{5}/', $errorMessage, $exmo_error_code);
+        preg_match('/\d{5}/', $errorMessage, $exchange_error_code);
 
-        return $exmo_error_code[0];
+        return $exchange_error_code[0];
     }
 }

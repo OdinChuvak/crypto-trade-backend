@@ -14,7 +14,8 @@ class m211021_200905_currency_pair_table extends Migration
     {
         $this->createTable('currency_pair', [
             'id' => $this->primaryKey(),
-            'name' => $this->string(15)->unique()->notNull(),
+            'exchange_id' => $this->integer()->notNull(),
+            'name' => $this->string(15)->notNull(),
             'first_currency' => $this->string(15)->notNull(),
             'second_currency' => $this->string(15)->notNull(),
             'min_quantity' => $this->double()->notNull(),
@@ -24,6 +25,11 @@ class m211021_200905_currency_pair_table extends Migration
             'min_amount' => $this->double()->notNull(),
             'max_amount' => $this->double()->notNull(),
             'price_precision' => $this->tinyInteger()->notNull(),
+            'commission_taker_percent' => $this->double()->notNull(),
+            'commission_maker_percent' => $this->double()->notNull(),
+            'is_delisted' => $this->boolean()->defaultValue(false),
+            'updated_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
+            'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);
     }
 
@@ -34,19 +40,4 @@ class m211021_200905_currency_pair_table extends Migration
     {
         $this->dropTable('currency_pair');
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m211021_200905_currency_pair_table cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }

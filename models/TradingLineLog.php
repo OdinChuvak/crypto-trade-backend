@@ -4,11 +4,11 @@ namespace app\models;
 
 use app\helpers\FunctionBox;
 
-class TradingGridLog extends BaseModel
+class TradingLineLog extends BaseModel
 {
     public static function tableName()
     {
-        return 'trading_grid_log';
+        return 'trading_line_log';
     }
 
     public function rules()
@@ -17,7 +17,7 @@ class TradingGridLog extends BaseModel
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
             [
                 [
-                    'trading_grid_id',
+                    'trading_line_id',
                     'type',
                     'message'
                 ],
@@ -36,21 +36,21 @@ class TradingGridLog extends BaseModel
      *
      * @param $data
      * @param string $formName
-     * @return TradingGridLog
+     * @return TradingLineLog
      */
-    public static function add($data, string $formName = ''): TradingGridLog
+    public static function add($data, string $formName = ''): TradingLineLog
     {
-        $lastTradingGridLog = TradingGridLog::find()
-            ->where(['trading_grid_id' => $data['trading_grid_id']])
+        $lastTradingLineLog = TradingLineLog::find()
+            ->where(['trading_line_id' => $data['trading_line_id']])
             ->orderBy(['created_at' => SORT_DESC])
             ->one();
 
         /* Если лог с аналогичной ошибкой уже существует, удалим его */
-        if ($lastTradingGridLog
-            && $lastTradingGridLog->type === 'error'
-            && $lastTradingGridLog->error_code === $data['error_code'])
+        if ($lastTradingLineLog
+            && $lastTradingLineLog->type === 'error'
+            && $lastTradingLineLog->error_code === $data['error_code'])
         {
-            TradingGridLog::deleteAll(['id' => $lastTradingGridLog->id]);
+            TradingLineLog::deleteAll(['id' => $lastTradingLineLog->id]);
         }
 
         return parent::add($data);

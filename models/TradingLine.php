@@ -5,11 +5,11 @@ namespace app\models;
 use app\helpers\FunctionBox;
 use \yii\db\ActiveRecord;
 
-class TradingGrid extends ActiveRecord
+class TradingLine extends ActiveRecord
 {
     public static function tableName()
     {
-        return 'trading_grid';
+        return 'trading_line';
     }
 
     public function rules()
@@ -19,6 +19,7 @@ class TradingGrid extends ActiveRecord
             [
                 [
                     'pair_id',
+                    'exchange_id',
                     'order_step',
                     'order_amount'
                 ],
@@ -30,7 +31,7 @@ class TradingGrid extends ActiveRecord
         ];
     }
 
-    public function extraFields()
+    public function extraFields(): array
     {
         return [
             'pair'

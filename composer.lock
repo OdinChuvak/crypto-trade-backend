@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c1bdd1ee41b13b6fafc1438bf874d920",
+    "content-hash": "25ea3378090815e0562d5008cad3803d",
     "packages": [
         {
             "name": "bower-asset/inputmask",
@@ -292,49 +292,6 @@
                 }
             ],
             "time": "2021-10-11T09:18:27+00:00"
-        },
-        {
-            "name": "exmo/api",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/exmo-dev/exmo_composer.git",
-                "reference": "795ce37e61e8d0ff3c88afdcf26dd850ebedb326"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/exmo-dev/exmo_composer/zipball/795ce37e61e8d0ff3c88afdcf26dd850ebedb326",
-                "reference": "795ce37e61e8d0ff3c88afdcf26dd850ebedb326",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-0": {
-                    "Exmo\\Api": "src/",
-                    "Exmo\\Api\\Tests": "tests/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Composer package Exmo (Bitcoin Exchange) API PHP client",
-            "support": {
-                "issues": "https://github.com/exmo-dev/exmo_composer/issues",
-                "source": "https://github.com/exmo-dev/exmo_composer/tree/master"
-            },
-            "time": "2016-04-26T16:29:22+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -5802,5 +5759,5 @@
         "ext-json": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }

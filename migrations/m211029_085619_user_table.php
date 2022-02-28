@@ -28,19 +28,4 @@ class m211029_085619_user_table extends Migration
     {
         $this->dropTable('user');
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m211029_085619_user_table cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }

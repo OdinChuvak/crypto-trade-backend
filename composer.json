@@ -20,7 +20,6 @@
         "yiisoft/yii2-swiftmailer": "~2.0.0 || ~2.1.0",
         "vlucas/phpdotenv": "^5.3",
         "linslin/yii2-curl": "*",
-        "exmo/api": "^1.0",
         "ext-curl": "*",
         "ext-json": "*"
     },

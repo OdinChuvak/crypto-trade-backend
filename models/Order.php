@@ -6,18 +6,18 @@ use app\helpers\FunctionBox;
 
 class Order extends BaseModel
 {
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'order';
     }
 
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => 'ID ордера',
             'user_id' => 'ID пользователя',
-            'exmo_order_id' => 'ID ордера на криптовалютной бирже EXMO',
-            'trading_grid_id' => 'ID сетки ордера',
+            'exchange_order_id' => 'ID ордера на криптовалютной бирже',
+            'trading_line_id' => 'ID сетки ордера',
             'previous_order_id' => 'ID предыдущего ордера',
             'operation' => 'Операция производимая посредством ордера',
             'required_trading_rate' => 'Требуемый курс валюты для исполнения ордера',
@@ -43,7 +43,7 @@ class Order extends BaseModel
             [
                 [
                     'id',
-                    'exmo_order_id',
+                    'trading_line_id',
                     'previous_order_id',
                     'created_at',
                     'placed_at',
@@ -53,7 +53,7 @@ class Order extends BaseModel
             ],
             [
                 [
-                    'trading_grid_id',
+                    'trading_line_id',
                     'operation',
                     'required_trading_rate',
                     'user_id',
@@ -90,7 +90,7 @@ class Order extends BaseModel
 
     public function allowedExchangeRate()
     {
-        $grid = TradingGrid::findOne(['id' => $this->trading_grid_id]);
+        $grid = TradingLine::findOne(['id' => $this->trading_line_id]);
         $pair = CurrencyPair::findOne(['id' => $grid->pair_id]);
 
         if (!($this->required_trading_rate >= $pair->min_price
@@ -102,7 +102,7 @@ class Order extends BaseModel
 
     public function allowedQuantity()
     {
-        $grid = TradingGrid::findOne(['id' => $this->trading_grid_id]);
+        $grid = TradingLine::findOne(['id' => $this->trading_line_id]);
         $pair = CurrencyPair::findOne(['id' => $grid->pair_id]);
         $actualQuantity = round($grid->order_amount / $this->required_trading_rate, 6);
 
@@ -122,7 +122,7 @@ class Order extends BaseModel
          * Берем данные текущего ордера
          */
         $order = self::find()
-            ->with('grid')
+            ->with('line')
             ->where(['id' => $order_id])
             ->one();
 
@@ -138,8 +138,8 @@ class Order extends BaseModel
          * Данные сетки и валютной пары пишем в отдельные переменные
          * По валютной паре будем смотреть точность для курсов и общих сумм `price_precision`
          */
-        $grid = $order->grid;
-        $pair = CurrencyPair::findOne(['id' => $grid->pair_id]);
+        $line = $order->line;
+        $pair = CurrencyPair::findOne(['id' => $line->pair_id]);
 
         /*
          * Если предыдущего ордера не существует,
@@ -148,7 +148,7 @@ class Order extends BaseModel
          * на необходимый курс для исполнения текущего ордера `required_trading_rate`
          */
         if (empty($previousOrder)) {
-            return $grid->order_amount / $order->required_trading_rate;
+            return $line->order_amount / $order->required_trading_rate;
         }
 
         /*
@@ -170,7 +170,7 @@ class Order extends BaseModel
          * то есть мы собираемся продавать, вернем всю сумму,
          * полученную в предыдущем ордере (received).
          */
-        if ($grid->trading_method === 1) {
+        if ($line->trading_method === 1) {
             return $order->operation === 'buy'
                 ? $previousOrder->received / $order->required_trading_rate
                 : $previousOrder->received;
@@ -186,9 +186,9 @@ class Order extends BaseModel
          * то есть мы собираемся продавать, вернем всю сумму,
          * полученную в предыдущем ордере (received).
          */
-        elseif ($grid->trading_method === 2) {
+        elseif ($line->trading_method === 2) {
             return $order->operation === 'buy'
-                ? $grid->order_amount / $order->required_trading_rate
+                ? $line->order_amount / $order->required_trading_rate
                 : $previousOrder->received;
         }
         /*
@@ -202,22 +202,22 @@ class Order extends BaseModel
          * то есть мы собираемся продавать, вернем сумму заданную в сетке (order_amount),
          * на необходимый курс предыдущего ордера (required_trading_rate).
          */
-        elseif ($grid->trading_method === 3) {
+        elseif ($line->trading_method === 3) {
             return $order->operation === 'buy'
                 ? $previousOrder->received / $order->required_trading_rate
-                : $grid->order_amount / $previousOrder->required_trading_rate;
+                : $line->order_amount / $previousOrder->required_trading_rate;
         }
         else {
             return null;
         }
     }
 
-    public function getGrid()
+    public function getLine(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(TradingGrid::class, ['id' => 'trading_grid_id']);
+        return $this->hasOne(TradingLine::class, ['id' => 'trading_line_id']);
     }
 
-    public function getPair()
+    public function getPair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('grid');
     }

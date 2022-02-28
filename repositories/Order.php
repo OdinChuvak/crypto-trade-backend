@@ -4,7 +4,7 @@ namespace app\repositories;
 
 use app\helpers\AppError;
 use app\models\OrderLog;
-use app\models\TradingGridLog;
+use app\models\TradingLineLog;
 use app\models\UserLog;
 
 class Order
@@ -44,18 +44,18 @@ class Order
     /**
      * Метод отменяет все неисполненные ордера в сетке
      *
-     * @param $grid_id
+     * @param $line_id
      * @return bool
      * @throws \Exception
      */
-    public function cancelGridOrders($grid_id)
+    public function cancelGridOrders($line_id)
     {
         /**
          * Берем все неисполненные ордера сетки
          */
         $gridOrders = \app\models\Order::find()
             ->where([
-                '`order`.`trading_grid_id`' => $grid_id,
+                '`order`.`trading_line_id`' => $line_id,
                 '`order`.`is_executed`' => false,
                 '`order`.`is_canceled`' => false,
             ])
@@ -104,7 +104,7 @@ class Order
 
             OrderLog::add([
                 'user_id' => $model->user_id,
-                'trading_grid_id' => $model->trading_grid_id,
+                'trading_line_id' => $model->trading_line_id,
                 'order_id' => $model->id,
                 'type' => 'success',
                 'message' => 'Order successfully created',
@@ -118,9 +118,9 @@ class Order
             ? AppError::BUY_ORDER_CREATION_PROBLEM
             : AppError::SELL_ORDER_CREATION_PROBLEM;
 
-        TradingGridLog::add([
+        TradingLineLog::add([
             'user_id' => $model->user_id,
-            'trading_grid_id' => $model->trading_grid_id,
+            'trading_line_id' => $model->trading_line_id,
             'type' => $error['type'],
             'message' => $error['message'],
             'error_code' => $error['code'],
@@ -214,7 +214,7 @@ class Order
          * */
         $logData = [
             'user_id' => $order->user_id,
-            'trading_grid_id' => $order->trading_grid_id,
+            'trading_line_id' => $order->trading_line_id,
             'order_id' => $order->id,
         ];
 
@@ -223,10 +223,10 @@ class Order
          */
         $sellOrder = [
             'user_id' => $order->user_id,
-            'trading_grid_id' => $order->trading_grid_id,
+            'trading_line_id' => $order->trading_line_id,
             'previous_order_id' => $order->id,
             'operation' => 'sell',
-            'required_trading_rate' => round($order->required_trading_rate + ($order->required_trading_rate * $order->grid->order_step)/100, $order->pair->price_precision),
+            'required_trading_rate' => round($order->required_trading_rate + ($order->required_trading_rate * $order->line->order_step)/100, $order->pair->price_precision),
         ];
 
         /*
@@ -234,9 +234,9 @@ class Order
          */
         $newBuyOrder = [
             'user_id' => $order->user_id,
-            'trading_grid_id' => $order->trading_grid_id,
+            'trading_line_id' => $order->trading_line_id,
             'operation' => 'buy',
-            'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
+            'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->line->order_step), $order->pair->price_precision),
         ];
 
         /*
@@ -309,7 +309,7 @@ class Order
          * */
         $logData = [
             'user_id' => $order->user_id,
-            'trading_grid_id' => $order->trading_grid_id,
+            'trading_line_id' => $order->trading_line_id,
             'order_id' => $order->id,
         ];
 
@@ -318,9 +318,9 @@ class Order
          */
         $newBuyOrder = [
             'user_id' => $order->user_id,
-            'trading_grid_id' => $order->trading_grid_id,
+            'trading_line_id' => $order->trading_line_id,
             'operation' => 'buy',
-            'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
+            'required_trading_rate' => round(($order->required_trading_rate * 100) / (100 + $order->line->order_step), $order->pair->price_precision),
         ];
     }
 
@@ -344,7 +344,7 @@ class Order
          */
         $logData = [
             'user_id' => $activeOrder->user_id,
-            'trading_grid_id' => $activeOrder->grid->id,
+            'trading_line_id' => $activeOrder->line->id,
             'order_id' => $activeOrder->id,
         ];
 
@@ -403,8 +403,8 @@ class Order
                      * Достаем из ответа код ошибки и находим ошибку приложения,
                      * соответствующую ошибке из кода ответа
                      */
-                    $exmo_error_code = AppError::getExmoErrorFromMessage($orderCancel['error']);
-                    $error = AppError::getMappingError($exmo_error_code);
+                    $exchange_error_code = AppError::getExchangeErrorFromMessage($orderCancel['error']);
+                    $error = AppError::getMappingError($exchange_error_code);
 
                     /*
                      * Дополняем данные для записи в лог ордера, в случае неудачи

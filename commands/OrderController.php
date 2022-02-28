@@ -3,8 +3,10 @@
 namespace app\commands;
 
 use app\helpers\AppError;
+use app\helpers\Exchange;
 use app\models\Order;
 use app\models\OrderLog;
+use Exception;
 
 class OrderController extends \yii\console\Controller
 {
@@ -12,9 +14,9 @@ class OrderController extends \yii\console\Controller
      * Поочередный запуск всех скриптов
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    public function actionIndex()
+    public function actionIndex(): bool
     {
         $this->placement();
         $this->execution();
@@ -27,132 +29,146 @@ class OrderController extends \yii\console\Controller
      * Размещение ордера
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    public function placement()
+    public function placement(): bool
     {
         /**
-         * Берем всех уникальных пользователей, у кого есть неразмещенные ордера
+         * Берем все биржи
          */
-        $users = Order::find()
-            ->select('`order`.`user_id` as `id`')
-            ->distinct()
-            ->joinWith('grid')
-            ->where([
-                '`order`.`is_placed`' => false,
-                '`order`.`is_canceled`' => false,
-            ])
-            ->andWhere(['`trading_grid`.`is_archived`' => false])
-            ->all();
+        $exchanges = \app\models\Exchange::find()->all();
 
-        /**
-         * Если неразмещенных ордеров нет, завершаем скрипт
-         */
-        if (empty($users)) {
-            return true;
-        }
-
-        /**
-         * В противном случае работаем с каждым юзером, у кого есть неразмещенные ордера
-         */
-        foreach ($users as $user) {
+        foreach ($exchanges as $exchange) {
 
             /**
-             * Создаем класс репозиторий для работы с ордерами
-             * Если не удалось создать репозиторий, перейдем к следующему юзеру
+             * Берем всех уникальных пользователей, у кого есть неразмещенные ордера в конкретной бирже
              */
-            $orderRepo = new \app\repositories\Order($user->id);
-
-            if (!$orderRepo) {
-                continue;
-            }
-
-            /**
-             * Если с репозиторием все в порядке, берем все неразмещенные ордера
-             * юзера, в порядке их создания (поле `created_at`)
-             */
-            $orders = Order::find()
-                ->with('pair')
-                ->joinWith('grid')
+            $users = Order::find()
+                ->select('`order`.`user_id` as `id`')
+                ->distinct()
+                ->joinWith('line')
                 ->where([
-                    '`order`.`user_id`' => $user->id,
                     '`order`.`is_placed`' => false,
                     '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere([
-                    '`trading_grid`.`is_archived`' => false
+                    '`trading_line`.`is_archived`' => false,
+                    '`trading_line`.`exchange_id`' => $exchange->id,
                 ])
-                ->orderBy('created_at')
                 ->all();
 
-            foreach ($orders as $key => $order) {
+            /**
+             * Если неразмещенных ордеров нет, перейдем ко следующей бирже
+             */
+            if (empty($users)) {
+                continue;
+            }
+
+            /**
+             * В противном случае работаем с каждым юзером, у кого есть неразмещенные ордера
+             */
+            foreach ($users as $user) {
 
                 /**
-                 * Шлем заявку на создание ордера на бирже
+                 * Получаем экземпляр биржи с авторизацией под конкретного юзера
                  */
-                $api = $orderRepo->exmo->createOrder([
-                    'pair' => $order->pair->first_currency . '_' . $order->pair->second_currency,
-                    'quantity' => Order::getQuantity($order->id),
-                    'price' => $order->required_trading_rate,
-                    'type' => $order->operation,
-                ]);
+                $EXCHANGE = Exchange::getObject($exchange->id, $user->id);
 
-                if ($api['result']) {
+                /**
+                 * Если авторизация не удалась, переходим к следующему юзеру
+                 */
+                if (!$EXCHANGE) {
+                    continue;
+                }
+
+                /**
+                 * Берем все созданные не размещенные и не отмененные ордера конкретной биржи, конкретного юзера
+                 */
+                $orders = Order::find()
+                    ->with('pair')
+                    ->joinWith('line')
+                    ->where([
+                        '`order`.`user_id`' => $user->id,
+                        '`order`.`is_placed`' => false,
+                        '`order`.`is_canceled`' => false,
+                    ])
+                    ->andWhere([
+                        '`trading_line`.`is_archived`' => false,
+                        '`trading_line`.`exchange_id`' => $exchange->id,
+                    ])
+                    ->orderBy('created_at')
+                    ->all();
+
+                foreach ($orders as $key => $order) {
 
                     /**
-                     * Дописываем в ордер, id ордера на бирже,
-                     * ставим метку о размещении и снимаем метку ошибки,
-                     * на случай, если предыдущая попытка размещения была с ошибкой
+                     * Шлем заявку на создание ордера на бирже
                      */
-                    $order->exmo_order_id = $api['order_id'];
-                    $order->is_placed = true;
-                    $order->is_error = false;
-                    $order->placed_at = date("Y-m-d H:i:s");
-
-                    /**
-                     * Сохраняем ордер и пишем лог
-                     */
-                    $order->save();
-
-                    OrderLog::add([
-                        'user_id' => $user->id,
-                        'trading_grid_id' => $order->grid->id,
-                        'order_id' => $order->id,
-                        'type' => 'success',
-                        'message' => 'The order has been successfully placed on the exchange',
-                        'error_code' => null,
+                    $api = $EXCHANGE->createOrder([
+                        'pair' => $order->pair->first_currency . '_' . $order->pair->second_currency,
+                        'quantity' => Order::getQuantity($order->id),
+                        'price' => $order->required_trading_rate,
+                        'type' => $order->operation,
                     ]);
 
-                } else {
+                    if ($api['result']) {
 
-                    /**
-                     * Если ордер не удалось создать на бирже,
-                     * ставим метку об ошибке
-                     */
-                    $order->is_error = true;
+                        /**
+                         * Дописываем в ордер, id ордера на бирже,
+                         * ставим метку о размещении и снимаем метку ошибки,
+                         * на случай, если предыдущая попытка размещения была с ошибкой
+                         */
+                        $order->exmo_order_id = $api['order_id'];
+                        $order->is_placed = true;
+                        $order->is_error = false;
+                        $order->placed_at = date("Y-m-d H:i:s");
 
-                    /**
-                     * Сохраняем и пишем лог ошибки
-                     */
-                    $order->save();
+                        /**
+                         * Сохраняем ордер и пишем лог
+                         */
+                        $order->save();
 
-                    /**
-                     * Достаем из ответа код ошибки и находим ошибку приложения,
-                     * соответствующую ошибке из кода ответа
-                     */
-                    $exmo_error_code = AppError::getExmoErrorFromMessage($api['error']);
-                    $error = AppError::getMappingError($exmo_error_code);
+                        OrderLog::add([
+                            'user_id' => $user->id,
+                            'trading_line_id' => $order->line->id,
+                            'order_id' => $order->id,
+                            'type' => 'success',
+                            'message' => 'Ордер успешно размещен на бирже',
+                            'error_code' => null,
+                        ]);
 
-                    OrderLog::add([
-                        'user_id' => $user->id,
-                        'trading_grid_id' => $order->grid->id,
-                        'order_id' => $order->id,
-                        'type' => $error['type'],
-                        'message' => $error['message'].' '.$api['error'],
-                        'error_code' => $error['code'],
-                    ]);
+                    } else {
+
+                        /**
+                         * Если ордер не удалось создать на бирже,
+                         * ставим метку об ошибке
+                         */
+                        $order->is_error = true;
+
+                        /**
+                         * Сохраняем и пишем лог ошибки
+                         */
+                        $order->save();
+
+                        /**
+                         * Достаем из ответа код ошибки и находим ошибку приложения,
+                         * соответствующую ошибке из кода ответа
+                         */
+                        $exchange_error_code = AppError::getExchangeErrorFromMessage($api['error']);
+                        $error = AppError::getMappingError($exchange_error_code);
+
+                        OrderLog::add([
+                            'user_id' => $user->id,
+                            'trading_line_id' => $order->line->id,
+                            'order_id' => $order->id,
+                            'type' => $error['type'],
+                            'message' => $error['message'].' '.$api['error'],
+                            'error_code' => $error['code'],
+                        ]);
+                    }
                 }
             }
+
         }
 
         return true;
@@ -162,196 +178,215 @@ class OrderController extends \yii\console\Controller
      * Проверяет ордера на реализацию и помечает как исполненные
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
-    public function execution()
+    public function execution(): bool
     {
         /**
-         * Берем всех уникальных пользователей,
-         * у кого есть размещенные, но не исполненные ордера
+         * Берем все биржи
          */
-        $users = Order::find()
-            ->select('`order`.`user_id` as `id`')
-            ->distinct()
-            ->joinWith('grid')
-            ->where([
-                '`order`.`is_placed`' => true,
-                '`order`.`is_executed`' => false,
-                '`order`.`is_canceled`' => false,
-            ])
-            ->andWhere(['`trading_grid`.`is_archived`' => false])
-            ->all();
+        $exchanges = \app\models\Exchange::find()->all();
 
-        /**
-         * Если размещенных, но не исполненнных ордеров ни у кого нет, завершаем скрипт
-         */
-        if (empty($users)) {
-            return true;
-        }
-
-        /**
-         * В противном случае работаем с каждым юзером,
-         * у кого есть размещенные, но не исполненные ордера
-         */
-        foreach ($users as $user) {
+        foreach ($exchanges as $exchange) {
 
             /**
-             * Создаем класс репозиторий для работы с ордерами
-             * Если не удалось создать репозиторий, перейдем к следующему юзеру
+             * Берем всех уникальных пользователей,
+             * у кого есть размещенные, но не исполненные ордера в конкретной бирже
              */
-            $orderRepo = new \app\repositories\Order($user->id);
-
-            if (!$orderRepo) {
-                continue;
-            }
-
-            /**
-             * Если с репозиторием все в порядке, берем все размещенные,
-             * но не исполненные ордера юзера, в порядке их размещения (поле `placed_at`)
-             */
-            $orders = Order::find()
-                ->with('pair')
-                ->joinWith('grid')
+            $users = Order::find()
+                ->select('`order`.`user_id` as `id`')
+                ->distinct()
+                ->joinWith('line')
                 ->where([
-                    '`order`.`user_id`' => $user->id,
                     '`order`.`is_placed`' => true,
                     '`order`.`is_executed`' => false,
                     '`order`.`is_canceled`' => false,
                 ])
-                ->andWhere(['`trading_grid`.`is_archived`' => false])
-                ->orderBy('placed_at')
+                ->andWhere([
+                    '`trading_line`.`is_archived`' => false,
+                    '`trading_line`.`exchange_id`' => $exchange->id,
+                ])
                 ->all();
 
             /**
-             * Шлем запрос на получение списка всех активных ордеров пользователя
+             * Если размещенных, но не исполненных ордеров ни у кого нет, переходим ко следующей бирже
              */
-            $activeOrders = $orderRepo->exmo->getOpenOrdersList();
+            if (empty($users)) {
+                continue;
+            }
 
-            foreach ($orders as $key => $order) {
+            /**
+             * В противном случае работаем с каждым юзером,
+             * у кого есть размещенные, но не исполненные ордера
+             */
+            foreach ($users as $user) {
 
                 /**
-                 * Берем название валютной пары ордера в формате XXX_YYY
-                 * (используется как ключ в массиве активных ордеров)
+                 * Получаем экземпляр биржи с авторизацией под конкретного юзера
+                 * А также мапер данных этой биржи
                  */
-                $pairName = $order->pair->first_currency . '_' . $order->pair->second_currency;
+                $EXCHANGE = Exchange::getObject($exchange->id, $user->id);
+                $MAPPER = Exchange::getDataMapper($exchange->id);
 
                 /**
-                 * Если ордер найден в списке активных ордеров,
-                 * то переходим ко следующему ордеру
+                 * Если авторизация не удалась, переходим к следующему юзеру
                  */
-                if (!empty($activeOrders) && isset($activeOrders[$pairName])) {
-                    foreach ($activeOrders[$pairName] as $activeOrder) {
-                        if ($order->exmo_order_id == $activeOrder['order_id']) {
-                            continue 2;
-                        }
-                    }
+                if (!$EXCHANGE) {
+                    continue;
                 }
 
                 /**
-                 * Если ордера нет в списке активных ордеров,
-                 * пытаемся получить список продаж по ордеру
+                 * Если с биржей все в порядке, берем все размещенные,
+                 * но не исполненные ордера юзера, в порядке их размещения (поле `placed_at`)
                  */
-                $orderTrades = $orderRepo->exmo->getOrderTrades($order->exmo_order_id);
+                $orders = Order::find()
+                    ->with('pair')
+                    ->joinWith('line')
+                    ->where([
+                        '`order`.`user_id`' => $user->id,
+                        '`order`.`is_placed`' => true,
+                        '`order`.`is_executed`' => false,
+                        '`order`.`is_canceled`' => false,
+                    ])
+                    ->andWhere([
+                        '`trading_line`.`is_archived`' => false,
+                        '`trading_line`.`exchange_id`' => $exchange->id,
+                    ])
+                    ->orderBy('placed_at')
+                    ->all();
 
-                if (isset($orderTrades['result']) && !$orderTrades['result']) {
+                /**
+                 * Шлем запрос на получение списка всех активных ордеров пользователя
+                 */
+                $activeOrders = $EXCHANGE->getOpenOrdersList();
+                $activeOrders = $MAPPER->mapOrdersList($activeOrders);
 
-                    /**
-                     * Если ордера нет на бирже (пользователь вручную удалил его
-                     * через интерфейс биржи, или возникла какая-то проблема с получением
-                     * информации по ордеру, ставим метку об ошибке и сохраняем ордер
-                     */
-                    $order->is_error = true;
-
-                    $order->save();
-
-                    /**
-                     * Достаем из ответа код ошибки и находим ошибку приложения,
-                     * соответствующую ошибке из кода ответа и пишем лог
-                     */
-                    $exmo_error_code = AppError::getExmoErrorFromMessage($orderTrades['error']);
-                    $error = AppError::getMappingError($exmo_error_code);
-
-                    OrderLog::add([
-                        'user_id' => $user->id,
-                        'trading_grid_id' => $order->grid->id,
-                        'order_id' => $order->id,
-                        'type' => $error['type'],
-                        'message' => $error['message'].' '.$orderTrades['error'],
-                        'error_code' => $error['code'],
-                    ]);
-
-                } else {
+                foreach ($orders as $key => $order) {
 
                     /**
-                     * Если же информация по продажам ордера есть,
-                     * вычисляем и дописываем в ордер информацию по сделке:
-                     * - актуальный курс сделки,
-                     * - актуальная инвестированная сумма,
-                     * - актуальная полученная сумма,
-                     * - актуальная сумма комиссии
+                     * Берем название валютной пары ордера в формате XXX_YYY
+                     * (используется как ключ в массиве активных ордеров)
                      */
-                    $k = 0;
-                    $actual_trading_rate = 0;
-                    $invested = 0;
-                    $received = 0;
-                    $commission = 0;
+                    $pairName = $order->pair->first_currency . '_' . $order->pair->second_currency;
 
                     /**
-                     * Ордер мог быть продан по частям, и поэтому в нем может быть
-                     * несколько продаж. В таком случае считаем средний показатель
-                     * актуального курса и комиссии, а также суммы инвестированных
-                     * и полученных средств
+                     * Если ордер найден в списке активных ордеров,
+                     * то переходим ко следующему ордеру
                      */
-                    foreach ($orderTrades['trades'] as $trade) {
-
-                        /**
-                         * 'invested' и 'received', в зависимости от того, какая операция была произведена,
-                         * меняются местами. То есть, если в паре производится операция покупки 'buy',
-                         * то инвестируемыми считаются средства во второй валюте, а получаемыми - в первой.
-                         * В случае, если произведена операция продажи, то есть 'sell', инвестируемыми
-                         * будут считаться средства первой валюты, а получаемыми второй.
-                         *
-                         * Комиссия взимается с получаемой валюты
-                         */
-
-                        $actual_trading_rate += $trade['price'];
-                        $invested += $order->operation === 'buy'
-                            ? $trade['amount']
-                            : $trade['quantity'];
-                        $received += $order->operation === 'buy'
-                            ? $trade['quantity'] - $trade['commission_amount']
-                            : $trade['amount'] - $trade['commission_amount'];
-                        $commission += $trade['commission_amount'];
-                        $k++;
+                    if (!empty($activeOrders) && isset($activeOrders[$pairName])) {
+                        foreach ($activeOrders[$pairName] as $activeOrder) {
+                            if ($order->exmo_order_id == $activeOrder['order_id']) {
+                                continue 2;
+                            }
+                        }
                     }
 
                     /**
-                     * Фиксируем данные продаж в ордере  и сохраняем его
+                     * Если ордера нет в списке активных ордеров,
+                     * пытаемся получить список продаж по ордеру
                      */
-                    $executionData = [
-                        'actual_trading_rate' => round($actual_trading_rate / $k, $order->pair->price_precision),
-                        'invested' => round($invested, $order->pair->price_precision),
-                        'received' => round($received, $order->pair->price_precision),
-                        'commission_amount' => round($commission / $k, $order->pair->price_precision),
-                        'is_executed' => true,
-                        'is_error' => false,
-                        'executed_at' => date("Y-m-d H:i:s"),
-                    ];
+                    $orderTrades = $orderRepo->exmo->getOrderTrades($order->exmo_order_id);
 
-                    $order->load($executionData, '');
-                    $order->save();
+                    if (isset($orderTrades['result']) && !$orderTrades['result']) {
 
-                    /**
-                     * Не забываем зафиксировать лог
-                     */
-                    OrderLog::add([
-                        'user_id' => $user->id,
-                        'trading_grid_id' => $order->grid->id,
-                        'order_id' => $order->id,
-                        'type' => 'success',
-                        'message' => 'The order has been successfully executed',
-                        'error_code' => null,
-                    ]);
+                        /**
+                         * Если ордера нет на бирже (пользователь вручную удалил его
+                         * через интерфейс биржи, или возникла какая-то проблема с получением
+                         * информации по ордеру, ставим метку об ошибке и сохраняем ордер
+                         */
+                        $order->is_error = true;
+
+                        $order->save();
+
+                        /**
+                         * Достаем из ответа код ошибки и находим ошибку приложения,
+                         * соответствующую ошибке из кода ответа и пишем лог
+                         */
+                        $exchange_error_code = AppError::getExchangeErrorFromMessage($orderTrades['error']);
+                        $error = AppError::getMappingError($exchange_error_code);
+
+                        OrderLog::add([
+                            'user_id' => $user->id,
+                            'trading_line_id' => $order->line->id,
+                            'order_id' => $order->id,
+                            'type' => $error['type'],
+                            'message' => $error['message'].' '.$orderTrades['error'],
+                            'error_code' => $error['code'],
+                        ]);
+
+                    } else {
+
+                        /**
+                         * Если же информация по продажам ордера есть,
+                         * вычисляем и дописываем в ордер информацию по сделке:
+                         * - актуальный курс сделки,
+                         * - актуальная инвестированная сумма,
+                         * - актуальная полученная сумма,
+                         * - актуальная сумма комиссии
+                         */
+                        $k = 0;
+                        $actual_trading_rate = 0;
+                        $invested = 0;
+                        $received = 0;
+                        $commission = 0;
+
+                        /**
+                         * Ордер мог быть продан по частям, и поэтому в нем может быть
+                         * несколько продаж. В таком случае считаем средний показатель
+                         * актуального курса и комиссии, а также суммы инвестированных
+                         * и полученных средств
+                         */
+                        foreach ($orderTrades['trades'] as $trade) {
+
+                            /**
+                             * 'invested' и 'received', в зависимости от того, какая операция была произведена,
+                             * меняются местами. То есть, если в паре производится операция покупки 'buy',
+                             * то инвестируемыми считаются средства во второй валюте, а получаемыми - в первой.
+                             * В случае, если произведена операция продажи, то есть 'sell', инвестируемыми
+                             * будут считаться средства первой валюты, а получаемыми второй.
+                             *
+                             * Комиссия взимается с получаемой валюты
+                             */
+
+                            $actual_trading_rate += $trade['price'];
+                            $invested += $order->operation === 'buy'
+                                ? $trade['amount']
+                                : $trade['quantity'];
+                            $received += $order->operation === 'buy'
+                                ? $trade['quantity'] - $trade['commission_amount']
+                                : $trade['amount'] - $trade['commission_amount'];
+                            $commission += $trade['commission_amount'];
+                            $k++;
+                        }
+
+                        /**
+                         * Фиксируем данные продаж в ордере  и сохраняем его
+                         */
+                        $executionData = [
+                            'actual_trading_rate' => round($actual_trading_rate / $k, $order->pair->price_precision),
+                            'invested' => round($invested, $order->pair->price_precision),
+                            'received' => round($received, $order->pair->price_precision),
+                            'commission_amount' => round($commission / $k, $order->pair->price_precision),
+                            'is_executed' => true,
+                            'is_error' => false,
+                            'executed_at' => date("Y-m-d H:i:s"),
+                        ];
+
+                        $order->load($executionData, '');
+                        $order->save();
+
+                        /**
+                         * Не забываем зафиксировать лог
+                         */
+                        OrderLog::add([
+                            'user_id' => $user->id,
+                            'trading_line_id' => $order->line->id,
+                            'order_id' => $order->id,
+                            'type' => 'success',
+                            'message' => 'The order has been successfully executed',
+                            'error_code' => null,
+                        ]);
+                    }
                 }
             }
         }
@@ -363,7 +398,7 @@ class OrderController extends \yii\console\Controller
      * Создает ордера-продолжения для всех исполненных ордеров
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function extension()
     {
@@ -432,7 +467,7 @@ class OrderController extends \yii\console\Controller
                  * В первую очередь, отменим все неисполненные ордера в сетке ордера,
                  * так как будут созданы новые, более актуальные ордера
                  */
-                $orderRepo->cancelGridOrders($order->trading_grid_id);
+                $orderRepo->cancelGridOrders($order->trading_line_id);
 
                 /**
                  * Теперь создадим 2 ордера, являющиеся реакцией на исполнение
@@ -440,16 +475,16 @@ class OrderController extends \yii\console\Controller
                  */
                 $orderRepo->createOrder([
                     'user_id' => $order->user_id,
-                    'trading_grid_id' => $order->trading_grid_id,
+                    'trading_line_id' => $order->trading_line_id,
                     'operation' => 'buy',
-                    'required_trading_rate' => round(($order->actual_trading_rate * 100) / (100 + $order->grid->order_step), $order->pair->price_precision),
+                    'required_trading_rate' => round(($order->actual_trading_rate * 100) / (100 + $order->line->order_step), $order->pair->price_precision),
                 ], '');
 
                 $orderRepo->createOrder([
                     'user_id' => $order->user_id,
-                    'trading_grid_id' => $order->trading_grid_id,
+                    'trading_line_id' => $order->trading_line_id,
                     'operation' => 'sell',
-                    'required_trading_rate' => round($order->actual_trading_rate + ($order->actual_trading_rate * $order->grid->order_step) / 100, $order->pair->price_precision),
+                    'required_trading_rate' => round($order->actual_trading_rate + ($order->actual_trading_rate * $order->line->order_step) / 100, $order->pair->price_precision),
                 ], '');
 
                 /**
@@ -465,7 +500,7 @@ class OrderController extends \yii\console\Controller
                  */
                 OrderLog::add([
                     'user_id' => $user->id,
-                    'trading_grid_id' => $order->grid->id,
+                    'trading_line_id' => $order->line->id,
                     'order_id' => $order->id,
                     'type' => 'success',
                     'message' => 'The order has been successfully continued',

@@ -3,19 +3,19 @@
 use yii\db\Migration;
 
 /**
- * Class m211115_131105_trading_grid_log
+ * Class m211115_131105_trading_line_log
  */
-class m211115_131105_trading_grid_log extends Migration
+class m211115_131105_trading_line_log extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('trading_grid_log', [
+        $this->createTable('trading_line_log', [
             'id' => $this->primaryKey(),
             'user_id' => $this->integer()->notNull(),
-            'trading_grid_id' => $this->integer()->notNull(),
+            'trading_line_id' => $this->integer()->notNull(),
             'type' => $this->string(24)->notNull(),
             'message' => $this->string(512)->notNull(),
             'error_code' => $this->integer()->null(),
@@ -28,21 +28,6 @@ class m211115_131105_trading_grid_log extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('trading_grid_log');
+        $this->dropTable('trading_line_log');
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m211115_131105_trading_grid_log cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }

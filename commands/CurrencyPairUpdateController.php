@@ -3,8 +3,9 @@
 namespace app\commands;
 
 use app\models\CurrencyPair;
+use app\models\Exchange;
+use Exception;
 use \yii\console\Controller;
-use linslin\yii2\curl\Curl;
 
 /**
  * Class CurrencyPairUpdateController
@@ -14,32 +15,60 @@ use linslin\yii2\curl\Curl;
  */
 class CurrencyPairUpdateController extends Controller
 {
+    /**
+     * @throws Exception
+     */
     public function actionIndex()
     {
-        $curl = new Curl();
-        $response = $curl->get('https://api.exmo.com/v1.1/pair_settings');
+        $exchangeModels = Exchange::find()->all();
+        $exchangePairsList = [];
 
-        if ($curl->errorCode !== null) {
-            \Yii::error('Error ' . $curl->errorCode . ': ' . $curl->errorText, __METHOD__);
-            exit();
-        }
+        foreach ($exchangeModels as $exchangeModel) {
+            $EXCHANGE = \app\helpers\Exchange::getClass($exchangeModel->id);
+            $exchangePairsList = $EXCHANGE::getCurrencyPairsList();
 
-        $data = json_decode($response, true);
+            $exchangePairsListFromDB = CurrencyPair::findAll([
+                'exchange_id' => $exchangeModel->id,
+                'is_delisted' => false,
+            ]);
 
-        foreach ($data as $currencyPair => $pairData)
-        {
-            $pair = explode('_', $currencyPair);
+            foreach ($exchangePairsList as $exKey =>$exchangePair) {
+                foreach ($exchangePairsListFromDB as $dbKey => $exchangePairFromDB) {
+                    if ($exchangePairFromDB->name === $exchangePair->name) {
 
-            $pairData['name'] = $pair[0].'/'.$pair[1];
-            $pairData['first_currency'] = $pair[0];
-            $pairData['second_currency'] = $pair[1];
+                        /*
+                         * Если в БД уже есть валютная пара, проверим, дату последнего обновления
+                         * Если она больше суток, обновим данные валютной пары
+                         */
+                        if (strtotime($exchangePairFromDB->updated_at) < (time() - 60*60*24)) {
+                            $exchangePairFromDB->load((array) $exchangePair, '');
+                            $exchangePairFromDB->updated_at = null;
+                            $exchangePairFromDB->save();
+                        }
 
-            $pairModel = CurrencyPair::findOne([
-                'first_currency' => $pair[0],
-                'second_currency' => $pair[1]]) ?: new CurrencyPair();
+                        /* Удалим, чтобы узнать, каких пар нет в БД */
+                        unset($exchangePairsList[$exKey]);
 
-            if (!($pairModel->load($pairData, '') && $pairModel->save())) {
-                \Yii::error('Error saving data of the ' . $pairData['name'] . ' currency pair to the database', __METHOD__);
+                        /* Удалим, чтобы знать, для каких валютных пар был произведен делистинг */
+                        unset($exchangePairsListFromDB[$dbKey]);
+
+                        continue 2;
+                    }
+                }
+            }
+
+            /* Запишем новые валютные пары */
+            foreach ($exchangePairsList as $exchangePair) {
+                $exchangePair->save();
+            }
+
+            /* Если данные по валютной паре перестали поступать и не обновлялись больше полу года,
+                считаем, что биржа провела делистинг по этой паре */
+            foreach ($exchangePairsListFromDB as $exchangePairFromDB) {
+                if (strtotime($exchangePairFromDB->updated_at) < time() - 60*60*24*180) {
+                    $exchangePairFromDB->is_delisted = true;
+                    $exchangePairFromDB->save();
+                }
             }
         }
     }

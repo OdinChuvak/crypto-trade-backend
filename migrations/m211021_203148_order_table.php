@@ -15,8 +15,8 @@ class m211021_203148_order_table extends Migration
         $this->createTable('order', [
             'id' => $this->primaryKey(),
             'user_id' => $this->integer()->notNull(),
-            'exmo_order_id' => $this->bigInteger()->null(),
-            'trading_grid_id' => $this->integer()->notNull(),
+            'exchange_order_id' => $this->bigInteger()->null(),
+            'trading_line_id' => $this->integer()->notNull(),
             'previous_order_id' => $this->integer()->null(),
             'operation' => $this->string(5)->notNull(),
             'required_trading_rate' => $this->double()->notNull(),
@@ -42,19 +42,4 @@ class m211021_203148_order_table extends Migration
     {
         $this->dropTable('order');
     }
-
-    /*
-    // Use up()/down() to run migration code without a transaction.
-    public function up()
-    {
-
-    }
-
-    public function down()
-    {
-        echo "m211021_203148_order_table cannot be reverted.\n";
-
-        return false;
-    }
-    */
 }
