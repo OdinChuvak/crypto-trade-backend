@@ -2,6 +2,7 @@
 
 namespace app\commands;
 
+use app\exceptions\ApiException;
 use app\models\CurrencyPair;
 use app\models\Exchange;
 use Exception;
@@ -25,7 +26,12 @@ class CurrencyPairUpdateController extends Controller
 
         foreach ($exchangeModels as $exchangeModel) {
             $EXCHANGE = \app\helpers\Exchange::getClass($exchangeModel->id);
-            $exchangePairsList = $EXCHANGE::getCurrencyPairsList();
+
+            try {
+                $exchangePairsList = $EXCHANGE::getCurrencyPairsList();
+            } catch (ApiException $apiException) {
+                continue;
+            }
 
             $exchangePairsListFromDB = CurrencyPair::findAll([
                 'exchange_id' => $exchangeModel->id,
@@ -34,14 +40,14 @@ class CurrencyPairUpdateController extends Controller
 
             foreach ($exchangePairsList as $exKey =>$exchangePair) {
                 foreach ($exchangePairsListFromDB as $dbKey => $exchangePairFromDB) {
-                    if ($exchangePairFromDB->name === $exchangePair->name) {
 
-                        /*
-                         * Если в БД уже есть валютная пара, проверим, дату последнего обновления
-                         * Если она больше суток, обновим данные валютной пары
-                         */
+                    $exchangePair['exchange_id'] = $exchangeModel->id;
+
+                    /* Если в БД уже есть валютная пара, проверим, дату последнего обновления
+                       Если она больше суток, обновим данные валютной пары */
+                    if ($exchangePairFromDB->name === $exchangePair['name']) {
                         if (strtotime($exchangePairFromDB->updated_at) < (time() - 60*60*24)) {
-                            $exchangePairFromDB->load((array) $exchangePair, '');
+                            $exchangePairFromDB->load($exchangePair, '');
                             $exchangePairFromDB->updated_at = null;
                             $exchangePairFromDB->save();
                         }
@@ -59,7 +65,7 @@ class CurrencyPairUpdateController extends Controller
 
             /* Запишем новые валютные пары */
             foreach ($exchangePairsList as $exchangePair) {
-                $exchangePair->save();
+                CurrencyPair::add($exchangePair);
             }
 
             /* Если данные по валютной паре перестали поступать и не обновлялись больше полу года,

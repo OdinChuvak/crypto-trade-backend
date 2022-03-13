@@ -2,6 +2,7 @@
 
 namespace app\commands;
 
+use app\exceptions\ApiException;
 use app\helpers\AppError;
 use app\helpers\Exchange;
 use app\models\Order;
@@ -65,7 +66,7 @@ class OrderController extends \yii\console\Controller
             }
 
             /**
-             * В противном случае работаем с каждым юзером, у кого есть неразмещенные ордера
+             * В противном случае работаем с каждым юзером, у кого есть неразмещенные ордера на текущей бирже
              */
             foreach ($users as $user) {
 
@@ -99,26 +100,30 @@ class OrderController extends \yii\console\Controller
                     ->orderBy('created_at')
                     ->all();
 
-                foreach ($orders as $key => $order) {
+                foreach ($orders as $order) {
 
                     /**
                      * Шлем заявку на создание ордера на бирже
                      */
-                    $api = $EXCHANGE->createOrder([
+                    $orderData = [
                         'pair' => $order->pair->first_currency . '_' . $order->pair->second_currency,
                         'quantity' => Order::getQuantity($order->id),
                         'price' => $order->required_trading_rate,
-                        'type' => $order->operation,
-                    ]);
+                        'operation' => $order->operation,
+                    ];
 
-                    if ($api['result']) {
+                    try {
+                        /**
+                         * Пытаемся создать ордер на бирже
+                         */
+                        $apiResult = $EXCHANGE->createOrder(...$orderData);
 
                         /**
                          * Дописываем в ордер, id ордера на бирже,
                          * ставим метку о размещении и снимаем метку ошибки,
                          * на случай, если предыдущая попытка размещения была с ошибкой
                          */
-                        $order->exmo_order_id = $api['order_id'];
+                        $order->exmo_order_id = $apiResult['exchange_order_id'];
                         $order->is_placed = true;
                         $order->is_error = false;
                         $order->placed_at = date("Y-m-d H:i:s");
@@ -137,8 +142,7 @@ class OrderController extends \yii\console\Controller
                             'error_code' => null,
                         ]);
 
-                    } else {
-
+                    } catch (ApiException $apiException) {
                         /**
                          * Если ордер не удалось создать на бирже,
                          * ставим метку об ошибке
@@ -150,20 +154,13 @@ class OrderController extends \yii\console\Controller
                          */
                         $order->save();
 
-                        /**
-                         * Достаем из ответа код ошибки и находим ошибку приложения,
-                         * соответствующую ошибке из кода ответа
-                         */
-                        $exchange_error_code = AppError::getExchangeErrorFromMessage($api['error']);
-                        $error = AppError::getMappingError($exchange_error_code);
-
                         OrderLog::add([
                             'user_id' => $user->id,
                             'trading_line_id' => $order->line->id,
                             'order_id' => $order->id,
-                            'type' => $error['type'],
-                            'message' => $error['message'].' '.$api['error'],
-                            'error_code' => $error['code'],
+                            'type' => 'error',
+                            'message' => $apiException->getMessage(),
+                            'error_code' => $apiException->getCode(),
                         ]);
                     }
                 }
@@ -226,7 +223,6 @@ class OrderController extends \yii\console\Controller
                  * А также мапер данных этой биржи
                  */
                 $EXCHANGE = Exchange::getObject($exchange->id, $user->id);
-                $MAPPER = Exchange::getDataMapper($exchange->id);
 
                 /**
                  * Если авторизация не удалась, переходим к следующему юзеру
@@ -258,8 +254,11 @@ class OrderController extends \yii\console\Controller
                 /**
                  * Шлем запрос на получение списка всех активных ордеров пользователя
                  */
-                $activeOrders = $EXCHANGE->getOpenOrdersList();
-                $activeOrders = $MAPPER->mapOrdersList($activeOrders);
+                try {
+                    $activeOrders = $EXCHANGE->getOpenOrdersList();
+                } catch (ApiException $apiException) {
+                    continue;
+                }
 
                 foreach ($orders as $key => $order) {
 

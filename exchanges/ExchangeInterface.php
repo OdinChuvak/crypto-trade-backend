@@ -2,7 +2,7 @@
 
 namespace app\exchanges;
 
-use app\clients\HttpClientInterface;
+use app\dto\ExchangeOrder;
 
 interface ExchangeInterface
 {
@@ -10,19 +10,22 @@ interface ExchangeInterface
     public function __construct($user_id);
 
     /** Вернет URL API биржи */
-    public static function getApiUrl();
+    public static function getApiUrl(): string;
 
     /** Вернет название объект типа DataMapperInterface */
-    public static function getDataMapperClass();
+    public static function getExchangeErrorMap(): array;
+
+    /** Вернет код ошибки из данных, полученных в результате неудачного api-запроса */
+    public static function getExchangeErrorCode(mixed $errorApiData) : int;
 
     /** Создаст ордер на бирже */
-    public function createOrder(array $orderData);
+    public function createOrder(string $pair, float $quantity, float $price, string $operation): array;
 
     /** Отменит ордер на бирже */
     public function cancelOrder(int $order_id);
 
     /** Вернет список всех торговых валютных пар биржи */
-    public static function getCurrencyPairsList();
+    public static function getCurrencyPairsList(): array;
 
     /** Отправит приватный запрос на биржу, получит ответ и обработает его */
     public function sendPrivateQuery(string $api_name, array $payload);

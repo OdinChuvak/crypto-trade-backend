@@ -3,6 +3,9 @@
 namespace app\exchanges;
 
 use app\clients\CurlClient;
+use app\helpers\AppError;
+use app\models\CurrencyPair;
+use app\exceptions\ApiException;
 use Exception;
 
 class Exmo extends BaseExchange implements ExchangeInterface
@@ -15,18 +18,50 @@ class Exmo extends BaseExchange implements ExchangeInterface
         return 'https://api.exmo.com/v1/';
     }
 
-    public static function getDataMapperClass(): string
+    /**
+     * @return array
+     */
+    public static function getExchangeErrorMap(): array
     {
-        return \app\mappers\Exmo::class;
+        return [
+            '40005' => AppError::INCORRECT_SIGNATURE,
+            '40017' => AppError::WRONG_API_KEY,
+            '40030' => AppError::KEY_IS_NOT_ACTIVATED,
+            '50018' => AppError::PARAMETER_ERROR,
+            '50052' => AppError::INSUFFICIENT_FUNDS,
+            '50054' => AppError::INSUFFICIENT_FUNDS,
+            '50277' => AppError::QUANTITY_LESS,
+            '50304' => AppError::ORDER_NOT_FOUND,
+        ];
+    }
+
+    /**
+     * @param mixed $errorApiData
+     * @return int
+     */
+    public static function getExchangeErrorCode(mixed $errorApiData): int
+    {
+        preg_match('/\d{5}/', $errorApiData['error'], $exchange_error_code);
+
+        return $exchange_error_code[0];
     }
 
     /**
      * @inheritDoc
      * @throws Exception
      */
-    public function createOrder(array $orderData)
+    public function createOrder(string $pair, float $quantity, float $price, string $operation): array
     {
-        return $this->sendPrivateQuery('order_create', $orderData);
+        $apiResult = $this->sendPrivateQuery('order_create', [
+            'pair' => $pair,
+            'quantity' => $quantity,
+            'price' => $price,
+            'type' => $operation,
+        ]);
+
+        return [
+            'exchange_order_id' => $apiResult['order_id']
+        ];
     }
 
     /**
@@ -44,7 +79,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @return mixed
      * @throws Exception
      */
-    public function getOpenOrdersList()
+    public function getOpenOrdersList(): mixed
     {
         return $this->sendPrivateQuery('user_open_orders');
     }
@@ -53,9 +88,33 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function getCurrencyPairsList()
+    public static function getCurrencyPairsList(): array
     {
-        return self::sendPublicQuery('pair_settings', []);
+        $exchangeCurrencyPairsList = self::sendPublicQuery('pair_settings', []);
+        $currencyPairsList = [];
+
+        foreach ($exchangeCurrencyPairsList as $pair => $exchangeCurrencyPair) {
+            $pair = explode('_', $pair);
+
+            $currencyPair = [
+                'name' => $pair[0].'/'.$pair[1],
+                'first_currency' => $pair[0],
+                'second_currency' => $pair[1],
+                'min_quantity' => $exchangeCurrencyPair['min_quantity'],
+                'max_quantity' => $exchangeCurrencyPair['max_quantity'],
+                'min_price' => $exchangeCurrencyPair['min_price'],
+                'max_price' => $exchangeCurrencyPair['max_price'],
+                'min_amount' => $exchangeCurrencyPair['min_amount'],
+                'max_amount' => $exchangeCurrencyPair['max_amount'],
+                'price_precision' => $exchangeCurrencyPair['price_precision'],
+                'commission_taker_percent' => $exchangeCurrencyPair['commission_taker_percent'],
+                'commission_maker_percent' => $exchangeCurrencyPair['commission_maker_percent'],
+            ];
+
+            $currencyPairsList[] = $currencyPair;
+        }
+
+        return $currencyPairsList;
     }
 
     /**
@@ -87,7 +146,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
             throw new Exception('Получены неверные данные. Убедитесь, что соединение работает и запрошенный API существует.');
         }
 
-        return (self::getDataMapperClass())::mapData($api_name, $dec, $payload);
+        return self::getResponse($dec);
     }
 
     /**
@@ -99,6 +158,21 @@ class Exmo extends BaseExchange implements ExchangeInterface
         $curlOptions = ['CURLOPT_POST' => false];
         $apiData = CurlClient::sendQuery(self::getApiUrl() . $api_name, $payload, [], $curlOptions);
 
-        return (self::getDataMapperClass())::mapData($api_name, $apiData, $payload);
+        return self::getResponse($apiData);
+    }
+
+    /**
+     * @throws ApiException
+     */
+    public static function getResponse(mixed $apiData)
+    {
+        // если запрос завершился неудачей, выбросим исключение
+        if (isset($apiData['result']) && !$apiData['result']) {
+            $error = self::getExchangeErrorMap()[self::getExchangeErrorCode($apiData['error'])];
+            throw new ApiException($error['message'], $error['code']);
+        }
+
+        // иначе вернем ответ запроса
+        return $apiData;
     }
 }

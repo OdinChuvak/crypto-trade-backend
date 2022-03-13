@@ -44,7 +44,7 @@ class UserLog extends BaseModel
             ->orderBy(['created_at' => SORT_DESC])
             ->one();
 
-        /* Если лог с аналогичной ошибкой уже существует, удалим его */
+        /* Если лог с текущей ошибкой уже существует, удалим его */
         if ($lastUserLog
             && $lastUserLog->type === 'error'
             && $lastUserLog->error_code === $data['error_code'])

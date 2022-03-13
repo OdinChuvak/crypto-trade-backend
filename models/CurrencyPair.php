@@ -6,7 +6,7 @@ use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\db\Expression;
 
-class CurrencyPair extends ActiveRecord
+class CurrencyPair extends BaseModel
 {
     public function behaviors(): array
     {
@@ -54,6 +54,7 @@ class CurrencyPair extends ActiveRecord
                 [
                     'id',
                     'exchange_id',
+                    'is_delisted',
                 ],
                 'safe'
             ],

@@ -24,7 +24,13 @@ class Exchange
             throw new Exception('Не задан идентификатор пользователя');
         }
 
-        return new self::$exchanges[$exchange_id]($user_id);
+        try {
+            $exchange = new self::$exchanges[$exchange_id]($user_id);
+        } catch (Exception $e) {
+            $exchange = false;
+        }
+
+        return $exchange;
     }
 
     /**
