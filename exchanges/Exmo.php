@@ -90,14 +90,14 @@ class Exmo extends BaseExchange implements ExchangeInterface
      */
     public static function getCurrencyPairsList(): array
     {
-        $exchangeCurrencyPairsList = self::sendPublicQuery('pair_settings', []);
+        $exchangeCurrencyPairsJson = self::sendPublicQuery('pair_settings', []);
+        $exchangeCurrencyPairsList = json_decode($exchangeCurrencyPairsJson, true);
         $currencyPairsList = [];
 
         foreach ($exchangeCurrencyPairsList as $pair => $exchangeCurrencyPair) {
             $pair = explode('_', $pair);
 
-            $currencyPair = [
-                'name' => $pair[0].'/'.$pair[1],
+            $currencyPairsList[] = [
                 'first_currency' => $pair[0],
                 'second_currency' => $pair[1],
                 'min_quantity' => $exchangeCurrencyPair['min_quantity'],
@@ -110,8 +110,6 @@ class Exmo extends BaseExchange implements ExchangeInterface
                 'commission_taker_percent' => $exchangeCurrencyPair['commission_taker_percent'],
                 'commission_maker_percent' => $exchangeCurrencyPair['commission_maker_percent'],
             ];
-
-            $currencyPairsList[] = $currencyPair;
         }
 
         return $currencyPairsList;

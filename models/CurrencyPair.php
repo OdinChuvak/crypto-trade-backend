@@ -31,30 +31,12 @@ class CurrencyPair extends BaseModel
             [
                 [
                     'name',
-                    'first_currency',
-                    'second_currency'
                 ],
                 'string'
             ],
             [
                 [
-                    'min_quantity',
-                    'max_quantity',
-                    'min_price',
-                    'max_price',
-                    'min_amount',
-                    'max_amount',
-                    'price_precision',
-                    'commission_taker_percent',
-                    'commission_maker_percent',
-                ],
-                'required'
-            ],
-            [
-                [
                     'id',
-                    'exchange_id',
-                    'is_delisted',
                 ],
                 'safe'
             ],
