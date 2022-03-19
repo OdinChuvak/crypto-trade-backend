@@ -112,113 +112,20 @@ class Order extends BaseModel
         }
     }
 
-    /*
-     * Метод возвращает точное количество закупаемой валюты по ордеру,
-     * рассчитывая все в соответствии с типом сетки
-     */
-    public static function getQuantity($order_id)
-    {
-        /*
-         * Берем данные текущего ордера
-         */
-        $order = self::find()
-            ->with('line')
-            ->where(['id' => $order_id])
-            ->one();
-
-        /*
-         * Берем данные предыдущего ордера
-         */
-        $previousOrder = self::find()
-            ->with('grid')
-            ->where(['id' => $order->previous_order_id])
-            ->one();
-
-        /*
-         * Данные сетки и валютной пары пишем в отдельные переменные
-         * По валютной паре будем смотреть точность для курсов и общих сумм `price_precision`
-         */
-        $line = $order->line;
-        $pair = CurrencyPair::findOne(['id' => $line->pair_id]);
-
-        /*
-         * Если предыдущего ордера не существует,
-         * количество вернем по настройке сетки.
-         * А именно - разделим order_amount, заданный в сетке,
-         * на необходимый курс для исполнения текущего ордера `required_trading_rate`
-         */
-        if (empty($previousOrder)) {
-            return $line->order_amount / $order->required_trading_rate;
-        }
-
-        /*
-         * Если предыдущий ордер есть, при этом операции у них равны,
-         * значит, что-то пошло не так. Вернем null,
-         * чтобы вызвать ошибку запроса
-         */
-        if ($order->operation === $previousOrder->operation) {
-            return null;
-        }
-
-        /*
-         * Вывод количество для типа #1 - "торговать на все"
-         * В этом случае:
-         *  - если операция текущего ордера 'buy',
-         * то разделим всю полученную в предыдущем ордере сумму (received),
-         * на необходимый курс для исполнения текущего ордера `required_trading_rate`,
-         *  - если же операция ордера 'sell',
-         * то есть мы собираемся продавать, вернем всю сумму,
-         * полученную в предыдущем ордере (received).
-         */
-        if ($line->trading_method === 1) {
-            return $order->operation === 'buy'
-                ? $previousOrder->received / $order->required_trading_rate
-                : $previousOrder->received;
-        }
-        /*
-         * Вывод количество для типа #2 - "Сохранять валюту, на которую покупаем"
-         * В этом случае:
-         *  - если операция текущего ордера 'buy',
-         * то есть мы собираемся покупать,
-         * разделим сумму покупки, заданную в сетке (order_amount),
-         * на необходимый курс для исполнения текущего ордера `required_trading_rate`,
-         *  - если же операция ордера 'sell',
-         * то есть мы собираемся продавать, вернем всю сумму,
-         * полученную в предыдущем ордере (received).
-         */
-        elseif ($line->trading_method === 2) {
-            return $order->operation === 'buy'
-                ? $line->order_amount / $order->required_trading_rate
-                : $previousOrder->received;
-        }
-        /*
-         * Вывод количество для типа #3 - "Сохранять покупаемую валюту"
-         * В этом случае:
-         *  - если операция текущего ордера 'buy',
-         * то есть мы собираемся покупать,
-         * разделим сумму, полученную в предыдущем ордере (received),
-         * на необходимый курс для исполнения текущего ордера `required_trading_rate`,
-         *  - если же операция ордера 'sell',
-         * то есть мы собираемся продавать, вернем сумму заданную в сетке (order_amount),
-         * на необходимый курс предыдущего ордера (required_trading_rate).
-         */
-        elseif ($line->trading_method === 3) {
-            return $order->operation === 'buy'
-                ? $previousOrder->received / $order->required_trading_rate
-                : $line->order_amount / $previousOrder->required_trading_rate;
-        }
-        else {
-            return null;
-        }
-    }
-
     public function getLine(): \yii\db\ActiveQuery
     {
         return $this->hasOne(TradingLine::class, ['id' => 'trading_line_id']);
     }
 
-    public function getPair(): \yii\db\ActiveQuery
+    public function getPair($exchange_id): \yii\db\ActiveQuery
     {
-        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('grid');
+        return $this->hasOne(ExchangeCurrencyPair::class, ['pair_id' => 'pair_id'])
+            ->onCondition(['exchange_id' => $exchange_id])
+            ->via('line');
+    }
+
+    public function getPrevious()
+    {
+        return $this->previous_order_id ? Order::findOne($this->previous_order_id) : null;
     }
 }

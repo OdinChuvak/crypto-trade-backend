@@ -15,7 +15,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      */
     public static function getApiUrl(): string
     {
-        return 'https://api.exmo.com/v1/';
+        return 'https://api.exmo.com/v1.1/';
     }
 
     /**
@@ -76,12 +76,59 @@ class Exmo extends BaseExchange implements ExchangeInterface
     }
 
     /**
+     * @return array
+     * @throws Exception
+     */
+    public function getOpenOrdersList(): array
+    {
+        $apiResult = json_decode($this->sendPrivateQuery('user_open_orders'), true);
+        $userOpenOrders = [];
+
+        foreach ($apiResult as $pair => $item) {
+            $pair = explode('_', $pair);
+
+            $userOpenOrders[] = [
+                "first_currency" => $pair[0],
+                "second_currency" => $pair[1],
+                "exchange_order_id" => $item['order_id'],
+                "type" => $item['type'],
+                "price" => $item['price'],
+                "quantity" => $item['quantity'],
+                "amount" => $item['amount'],
+                "created_at" => $item['created'],
+            ];
+        }
+
+        return $userOpenOrders;
+    }
+
+    /**
+     * Возвращает массив с продажами по ордеру (ордер может продаваться по частям)
+     *
+     * @param $order_id (id ордера на криптовалютной бирже Exmo, в таблице приложения `order` - exmo_order_id )
      * @return mixed
      * @throws Exception
      */
-    public function getOpenOrdersList(): mixed
+    public function getOrderTrades($order_id): mixed
     {
-        return $this->sendPrivateQuery('user_open_orders');
+        $apiResult = json_decode($this->sendPrivateQuery('order_trades'), true);
+        $orderTrades = [];
+
+        foreach ($apiResult["trades"] as $pair => $item) {
+            $orderTrades[] = [
+                "date" => $item["date"],
+                "type" => $item["type"],
+                "order_id" => $item["order_id"],
+                "quantity" => $item["quantity"],
+                "price" => $item["price"],
+                "amount" => $item["amount"],
+                "commission_amount" => $item["commission_amount"],
+                "commission_currency" => $item["commission_currency"],
+                "commission_percent" => $item["commission_percent"]
+            ];
+        }
+
+        return $orderTrades;
     }
 
     /**
