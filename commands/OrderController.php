@@ -106,7 +106,7 @@ class OrderController extends \yii\console\Controller
                      * Получим данные по валютной паре ордера, для данной биржи
                      */
                     $pair = ExchangeCurrencyPair::findOne([
-                        'pair_id' => $order->id,
+                        'pair_id' => $order->line->pair_id,
                         'exchange_id' => $exchange->id,
                     ]);
 
