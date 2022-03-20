@@ -48,6 +48,7 @@ class Order extends BaseModel
                     'created_at',
                     'placed_at',
                     'executed_at',
+                    'exchange_order_id',
                 ],
                 'safe'
             ],

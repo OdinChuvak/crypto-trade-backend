@@ -128,7 +128,7 @@ class OrderController extends \yii\console\Controller
                          * ставим метку о размещении и снимаем метку ошибки,
                          * на случай, если предыдущая попытка размещения была с ошибкой
                          */
-                        $order->exmo_order_id = $apiResult['exchange_order_id'];
+                        $order->exchange_order_id = $apiResult['exchange_order_id'];
                         $order->is_placed = true;
                         $order->is_error = false;
                         $order->placed_at = date("Y-m-d H:i:s");
@@ -285,7 +285,7 @@ class OrderController extends \yii\console\Controller
                      * пытаемся получить список продаж по ордеру
                      */
                     try {
-                        $orderTrades = $EXCHANGE->getOrderTrades($order->exmo_order_id);
+                        $orderTrades = $EXCHANGE->getOrderTrades($order->exchange_order_id);
 
                         /**
                          * Если же информация по продажам ордера есть,
