@@ -522,6 +522,7 @@ class OrderController extends \yii\console\Controller
                     Order::add([
                         'user_id' => $order->user_id,
                         'trading_line_id' => $order->trading_line_id,
+                        'previous_order_id' => $order->operation !== 'buy' ? $order->id : null,
                         'operation' => 'buy',
                         'required_trading_rate' => round((1 - ($order->line->order_step / 100)) * $order->actual_trading_rate, $pair->price_precision),
                     ], '');
@@ -529,6 +530,7 @@ class OrderController extends \yii\console\Controller
                     Order::add([
                         'user_id' => $order->user_id,
                         'trading_line_id' => $order->trading_line_id,
+                        'previous_order_id' => $order->operation !== 'sell' ? $order->id : null,
                         'operation' => 'sell',
                         'required_trading_rate' => round((1 + ($order->line->order_step / 100)) * $order->actual_trading_rate, $pair->price_precision),
                     ], '');
