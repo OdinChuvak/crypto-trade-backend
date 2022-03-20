@@ -29,6 +29,7 @@ class CurlClient implements HttpClientInterface
     {
         static $curl = null;
         $defaultOptions = self::getDefaultCurlOptions();
+        $isPostQuery = $params['CURLOPT_POST'] ?? $defaultOptions['CURLOPT_POST'];
 
         if ($curl === null) {
             $curl = curl_init();
@@ -41,11 +42,9 @@ class CurlClient implements HttpClientInterface
         }
 
         curl_setopt($curl, CURLOPT_URL, $path);
+        curl_setopt($curl, CURLOPT_POST, $isPostQuery);
 
-        curl_setopt($curl, CURLOPT_POST,
-            $params['CURLOPT_POST'] ?? $defaultOptions['CURLOPT_POST']);
-
-        if (curl_getinfo($curl, CURLOPT_POST) === true) {
+        if ($isPostQuery) {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
