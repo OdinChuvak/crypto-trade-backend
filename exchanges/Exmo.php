@@ -85,19 +85,21 @@ class Exmo extends BaseExchange implements ExchangeInterface
         $apiResult = $this->sendPrivateQuery('user_open_orders');
         $userOpenOrders = [];
 
-        foreach ($apiResult as $pair => $item) {
+        foreach ($apiResult as $pair => $ordersToPair) {
             $pair = explode('_', $pair);
 
-            $userOpenOrders[] = [
-                "first_currency" => $pair[0],
-                "second_currency" => $pair[1],
-                "exchange_order_id" => $item['order_id'],
-                "type" => $item['type'],
-                "price" => $item['price'],
-                "quantity" => $item['quantity'],
-                "amount" => $item['amount'],
-                "created_at" => $item['created'],
-            ];
+            foreach ($ordersToPair as $order) {
+                $userOpenOrders[] = [
+                    "first_currency" => $pair[0],
+                    "second_currency" => $pair[1],
+                    "exchange_order_id" => $order['order_id'],
+                    "type" => $order['type'],
+                    "price" => $order['price'],
+                    "quantity" => $order['quantity'],
+                    "amount" => $order['amount'],
+                    "created_at" => $order['created'],
+                ];
+            }
         }
 
         return $userOpenOrders;
