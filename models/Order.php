@@ -122,8 +122,8 @@ class Order extends BaseModel
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('line');
     }
 
-    public function getPrevious()
+    public function getPrevious(): \yii\db\ActiveQuery
     {
-        return $this->previous_order_id ? Order::findOne($this->previous_order_id) : null;
+        return $this->hasOne(Order::class, ['previous_order_id' => 'id']);
     }
 }
