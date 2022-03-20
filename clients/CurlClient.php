@@ -25,7 +25,7 @@ class CurlClient implements HttpClientInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function sendQuery(string $path, array $payload = [], array $headers = [], array $params = [])
+    public static function sendQuery(string $path, array $payload = [], array $headers = [], array $params = []): bool|string
     {
         static $curl = null;
         $defaultOptions = self::getDefaultCurlOptions();
@@ -45,7 +45,9 @@ class CurlClient implements HttpClientInterface
         curl_setopt($curl, CURLOPT_POST, $isPostQuery);
 
         if ($isPostQuery) {
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
+            $post_data = http_build_query($payload, '', '&');
+
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
 
