@@ -4,7 +4,6 @@ namespace app\exchanges;
 
 use app\clients\CurlClient;
 use app\helpers\AppError;
-use app\models\CurrencyPair;
 use app\exceptions\ApiException;
 use app\models\ExchangeCurrencyPair;
 use Exception;
@@ -83,7 +82,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      */
     public function getOpenOrdersList(): array
     {
-        $apiResult = json_decode($this->sendPrivateQuery('user_open_orders'), true);
+        $apiResult = $this->sendPrivateQuery('user_open_orders');
         $userOpenOrders = [];
 
         foreach ($apiResult as $pair => $item) {
@@ -108,12 +107,12 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * Возвращает массив с продажами по ордеру (ордер может продаваться по частям)
      *
      * @param $order_id (id ордера на криптовалютной бирже Exmo, в таблице приложения `order` - exmo_order_id )
-     * @return mixed
+     * @return array
      * @throws Exception
      */
-    public function getOrderTrades($order_id): mixed
+    public function getOrderTrades($order_id): array
     {
-        $apiResult = json_decode($this->sendPrivateQuery('order_trades'), true);
+        $apiResult = $this->sendPrivateQuery('order_trades');
         $orderTrades = [];
 
         foreach ($apiResult["trades"] as $pair => $item) {
@@ -140,7 +139,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     public static function getCurrencyPairsList(): array
     {
         $exchangeCurrencyPairsJson = self::sendPublicQuery('pair_settings', []);
-        $exchangeCurrencyPairsList = json_decode($exchangeCurrencyPairsJson, true);
+        $exchangeCurrencyPairsList = $exchangeCurrencyPairsJson;
         $currencyPairsList = [];
 
         foreach ($exchangeCurrencyPairsList as $pair => $exchangeCurrencyPair) {
