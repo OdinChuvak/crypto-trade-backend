@@ -6,6 +6,7 @@ use app\clients\CurlClient;
 use app\helpers\AppError;
 use app\models\CurrencyPair;
 use app\exceptions\ApiException;
+use app\models\ExchangeCurrencyPair;
 use Exception;
 
 class Exmo extends BaseExchange implements ExchangeInterface
@@ -50,10 +51,10 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public function createOrder(string $pair, float $quantity, float $price, string $operation): array
+    public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array
     {
         $apiResult = $this->sendPrivateQuery('order_create', [
-            'pair' => $pair,
+            'pair' => $pair->first_currency . '_' . $pair->second_currency,
             'quantity' => $quantity,
             'price' => $price,
             'type' => $operation,

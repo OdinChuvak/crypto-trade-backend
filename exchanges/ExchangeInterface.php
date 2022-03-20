@@ -3,6 +3,7 @@
 namespace app\exchanges;
 
 use app\dto\ExchangeOrder;
+use app\models\ExchangeCurrencyPair;
 
 interface ExchangeInterface
 {
@@ -19,7 +20,7 @@ interface ExchangeInterface
     public static function getExchangeErrorCode(mixed $errorApiData) : int;
 
     /** Создаст ордер на бирже */
-    public function createOrder(string $pair, float $quantity, float $price, string $operation): array;
+    public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array;
 
     /** Отменит ордер на бирже */
     public function cancelOrder(int $order_id);

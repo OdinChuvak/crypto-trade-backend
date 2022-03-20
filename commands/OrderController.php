@@ -4,6 +4,7 @@ namespace app\commands;
 
 use app\exceptions\ApiException;
 use app\helpers\Exchange;
+use app\models\ExchangeCurrencyPair;
 use app\models\Order;
 use app\models\OrderLog;
 use Exception;
@@ -85,7 +86,7 @@ class OrderController extends \yii\console\Controller
                  * Берем все созданные не размещенные и не отмененные ордера конкретной биржи, конкретного юзера
                  */
                 $orders = Order::find()
-                    ->getPair($exchange->id)
+                    ->with('pair')
                     ->joinWith('line')
                     ->where([
                         '`order`.`user_id`' => $user->id,
@@ -101,11 +102,16 @@ class OrderController extends \yii\console\Controller
 
                 foreach ($orders as $order) {
 
+                    $pair = ExchangeCurrencyPair::findOne([
+                        'pair_id' => $order->id,
+                        'exchange_id' => $exchange->id,
+                    ]);
+
                     /**
                      * Шлем заявку на создание ордера на бирже
                      */
                     $orderData = [
-                        'pair' => $order->pair->first_currency . '_' . $order->pair->second_currency,
+                        'pair_id' => $pair,
                         'quantity' => \app\helpers\Order::getQuantity($order->id),
                         'price' => $order->required_trading_rate,
                         'operation' => $order->operation,

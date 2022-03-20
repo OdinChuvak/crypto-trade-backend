@@ -119,9 +119,7 @@ class Order extends BaseModel
 
     public function getPair($exchange_id): \yii\db\ActiveQuery
     {
-        return $this->hasOne(ExchangeCurrencyPair::class, ['pair_id' => 'pair_id'])
-            ->onCondition(['exchange_id' => $exchange_id])
-            ->via('line');
+        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('line');
     }
 
     public function getPrevious()
