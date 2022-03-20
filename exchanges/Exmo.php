@@ -138,8 +138,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      */
     public static function getCurrencyPairsList(): array
     {
-        $exchangeCurrencyPairsJson = self::sendPublicQuery('pair_settings', []);
-        $exchangeCurrencyPairsList = $exchangeCurrencyPairsJson;
+        $exchangeCurrencyPairsList = self::sendPublicQuery('pair_settings', []);
         $currencyPairsList = [];
 
         foreach ($exchangeCurrencyPairsList as $pair => $exchangeCurrencyPair) {
@@ -203,6 +202,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     {
         $curlOptions = ['CURLOPT_POST' => false];
         $apiData = CurlClient::sendQuery(self::getApiUrl() . $api_name, $payload, [], $curlOptions);
+        $apiData = json_decode($apiData, true);
 
         return self::getResponse($apiData);
     }
