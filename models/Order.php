@@ -117,7 +117,7 @@ class Order extends BaseModel
         return $this->hasOne(TradingLine::class, ['id' => 'trading_line_id']);
     }
 
-    public function getPair($exchange_id): \yii\db\ActiveQuery
+    public function getPair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('line');
     }
