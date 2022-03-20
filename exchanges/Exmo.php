@@ -40,9 +40,9 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @param mixed $errorApiData
      * @return int
      */
-    public static function getExchangeErrorCode(mixed $errorApiData): int
+    public static function getExchangeErrorCode(string $error_message): int
     {
-        preg_match('/\d{5}/', $errorApiData['error'], $exchange_error_code);
+        preg_match('/\d{5}/', $error_message, $exchange_error_code);
 
         return $exchange_error_code[0];
     }

@@ -17,7 +17,7 @@ interface ExchangeInterface
     public static function getExchangeErrorMap(): array;
 
     /** Вернет код ошибки из данных, полученных в результате неудачного api-запроса */
-    public static function getExchangeErrorCode(mixed $errorApiData) : int;
+    public static function getExchangeErrorCode(string $error_message) : int;
 
     /** Создаст ордер на бирже */
     public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array;
