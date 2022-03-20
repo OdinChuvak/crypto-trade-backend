@@ -91,24 +91,34 @@ class Order extends BaseModel
 
     public function allowedExchangeRate()
     {
-        $grid = TradingLine::findOne(['id' => $this->trading_line_id]);
-        $pair = CurrencyPair::findOne(['id' => $grid->pair_id]);
+        $line = TradingLine::findOne(['id' => $this->trading_line_id]);
+        $pair = ExchangeCurrencyPair::findOne([
+            'pair_id' => $line->pair_id,
+            'exchange_id' => $line->exchange_id,
+        ]);
 
         if (!($this->required_trading_rate >= $pair->min_price
             && $this->required_trading_rate <= $pair->max_price)) {
-            $errorMsg = 'Invalid value for the currency rate. Acceptable rate values are from '.$pair->min_price.' to '.$pair->max_price.'.';
+            $errorMsg = 'Недопустимое значение цены. Допустимы значения от '.$pair->min_price.' до '.$pair->max_price.'.';
             $this->addError('required_trading_rate', $errorMsg);
         }
     }
 
     public function allowedQuantity()
     {
-        $grid = TradingLine::findOne(['id' => $this->trading_line_id]);
-        $pair = CurrencyPair::findOne(['id' => $grid->pair_id]);
-        $actualQuantity = round($grid->order_amount / $this->required_trading_rate, 6);
+        $line = TradingLine::findOne(['id' => $this->trading_line_id]);
+        $pair = ExchangeCurrencyPair::findOne([
+            'pair_id' => $line->pair_id,
+            'exchange_id' => $line->exchange_id,
+        ]);
+        $actualQuantity = round($line->order_amount / $this->required_trading_rate, 6);
 
         if ($actualQuantity < $pair->min_quantity || $actualQuantity > $pair->max_quantity) {
-            $errorMsg = 'Incorrect value of the quantity of purchased currency. Valid values are from '.$pair->min_quantity.' to '.$pair->max_quantity.'. Please change the currency rate or amount values to adjust the quantity.';
+
+            $errorMsg = 'Недопустимое значение количества для данной пары. 
+            Допустимы значения от '.$pair->min_quantity.' до '.$pair->max_quantity.'. 
+            Пожалуйста, измените значение курса валюты или суммы, чтобы скорректировать количество.';
+
             $this->addError('required_trading_rate', $errorMsg);
         }
     }
