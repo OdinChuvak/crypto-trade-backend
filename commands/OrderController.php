@@ -341,14 +341,16 @@ class OrderController extends \yii\console\Controller
                             $k++;
                         }
 
+                        $commission = $commission / $k;
+
                         /**
                          * Фиксируем данные продаж в ордере и сохраняем его
                          */
                         $executionData = [
                             'actual_trading_rate' => round($actual_trading_rate / $k, $pair->price_precision),
-                            'invested' => round($invested, $pair->price_precision),
-                            'received' => round($received, $pair->price_precision),
-                            'commission_amount' => round($commission / $k, $pair->price_precision),
+                            'invested' => $order->operation === 'buy' ? round($invested, $pair->price_precision) : $invested,
+                            'received' => $order->operation === 'buy' ? $received : round($received, $pair->price_precision),
+                            'commission_amount' => $order->operation === 'buy' ? $commission : round($commission, $pair->price_precision),
                             'is_executed' => true,
                             'is_error' => false,
                             'executed_at' => date("Y-m-d H:i:s"),
