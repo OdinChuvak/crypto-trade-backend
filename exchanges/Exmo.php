@@ -117,17 +117,17 @@ class Exmo extends BaseExchange implements ExchangeInterface
         ]);
         $orderTrades = [];
 
-        foreach ($apiResult["trades"] as $pair => $item) {
+        foreach ($apiResult["trades"] as $pair => $trade) {
             $orderTrades[] = [
-                "date" => $item["date"],
-                "type" => $item["type"],
-                "order_id" => $item["order_id"],
-                "quantity" => $item["quantity"],
-                "price" => $item["price"],
-                "amount" => $item["amount"],
-                "commission_amount" => $item["commission_amount"],
-                "commission_currency" => $item["commission_currency"],
-                "commission_percent" => $item["commission_percent"]
+                "order_id" => $trade["order_id"],
+                "date" => $trade["date"],
+                "type" => $trade["type"],
+                "quantity" => $trade["quantity"],
+                "price" => $trade["price"],
+                "amount" => $trade["amount"],
+                "commission_amount" => $trade["commission_amount"],
+                "commission_currency" => $trade["commission_currency"],
+                "commission_percent" => $trade["commission_percent"]
             ];
         }
 

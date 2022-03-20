@@ -318,7 +318,7 @@ class OrderController extends \yii\console\Controller
                          * актуального курса и комиссии, а также суммы инвестированных
                          * и полученных средств
                          */
-                        foreach ($orderTrades['trades'] as $trade) {
+                        foreach ($orderTrades as $trade) {
 
                             /**
                              * 'invested' и 'received', в зависимости от того, какая операция была произведена,
