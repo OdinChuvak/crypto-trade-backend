@@ -69,10 +69,10 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public function cancelOrder(int $order_id)
+    public function cancelOrder(int $exchange_order_id)
     {
         return $this->sendPrivateQuery('order_cancel', [
-            'order_id' => $order_id
+            'order_id' => $exchange_order_id
         ]);
     }
 
@@ -106,13 +106,15 @@ class Exmo extends BaseExchange implements ExchangeInterface
     /**
      * Возвращает массив с продажами по ордеру (ордер может продаваться по частям)
      *
-     * @param $order_id (id ордера на криптовалютной бирже Exmo, в таблице приложения `order` - exmo_order_id )
+     * @param $exchange_order_id (id ордера на криптовалютной бирже)
      * @return array
      * @throws Exception
      */
-    public function getOrderTrades($order_id): array
+    public function getOrderTrades($exchange_order_id): array
     {
-        $apiResult = $this->sendPrivateQuery('order_trades');
+        $apiResult = $this->sendPrivateQuery('order_trades', [
+            'order_id' => $exchange_order_id
+        ]);
         $orderTrades = [];
 
         foreach ($apiResult["trades"] as $pair => $item) {

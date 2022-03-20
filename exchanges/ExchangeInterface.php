@@ -23,10 +23,16 @@ interface ExchangeInterface
     public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array;
 
     /** Отменит ордер на бирже */
-    public function cancelOrder(int $order_id);
+    public function cancelOrder(int $exchange_order_id);
 
     /** Вернет список всех торговых валютных пар биржи */
     public static function getCurrencyPairsList(): array;
+
+    /** Вернет список всех активных ордеров авторизованного пользователя */
+    public function getOpenOrdersList(): array;
+
+    /** Вернет список всех продаж в конкретном ордере (ордер может исполняться по частям) */
+    public function getOrderTrades(int $exchange_order_id): array;
 
     /** Отправит приватный запрос на биржу, получит ответ и обработает его */
     public function sendPrivateQuery(string $api_name, array $payload);
