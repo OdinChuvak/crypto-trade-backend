@@ -102,6 +102,9 @@ class OrderController extends \yii\console\Controller
 
                 foreach ($orders as $order) {
 
+                    /**
+                     * Получим данные по валютной паре ордера, для данной биржи
+                     */
                     $pair = ExchangeCurrencyPair::findOne([
                         'pair_id' => $order->id,
                         'exchange_id' => $exchange->id,
@@ -241,7 +244,7 @@ class OrderController extends \yii\console\Controller
                  * но не исполненные ордера юзера, в порядке их размещения (поле `placed_at`)
                  */
                 $orders = Order::find()
-                    ->getPair($exchange->id)
+                    ->with('pair')
                     ->joinWith('line')
                     ->where([
                         '`order`.`user_id`' => $user->id,
@@ -266,6 +269,14 @@ class OrderController extends \yii\console\Controller
                 }
 
                 foreach ($orders as $key => $order) {
+
+                    /**
+                     * Получим данные по валютной паре ордера, для данной биржи
+                     */
+                    $pair = ExchangeCurrencyPair::findOne([
+                        'pair_id' => $order->id,
+                        'exchange_id' => $exchange->id,
+                    ]);
 
                     /**
                      * Ищем ордер в списке активных ордеров на бирже
@@ -331,13 +342,13 @@ class OrderController extends \yii\console\Controller
                         }
 
                         /**
-                         * Фиксируем данные продаж в ордере  и сохраняем его
+                         * Фиксируем данные продаж в ордере и сохраняем его
                          */
                         $executionData = [
-                            'actual_trading_rate' => round($actual_trading_rate / $k, $order->pair->price_precision),
-                            'invested' => round($invested, $order->pair->price_precision),
-                            'received' => round($received, $order->pair->price_precision),
-                            'commission_amount' => round($commission / $k, $order->pair->price_precision),
+                            'actual_trading_rate' => round($actual_trading_rate / $k, $pair->price_precision),
+                            'invested' => round($invested, $pair->price_precision),
+                            'received' => round($received, $pair->price_precision),
+                            'commission_amount' => round($commission / $k, $pair->price_precision),
                             'is_executed' => true,
                             'is_error' => false,
                             'executed_at' => date("Y-m-d H:i:s"),
@@ -405,14 +416,14 @@ class OrderController extends \yii\console\Controller
             $users = Order::find()
                 ->select('`order`.`user_id` as `id`')
                 ->distinct()
-                ->joinWith('grid')
+                ->joinWith('line')
                 ->where([
                     '`order`.`is_executed`' => true,
                     '`order`.`is_continued`' => false,
                     '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere([
-                    '`trading_grid`.`is_archived`' => false,
+                    '`trading_line`.`is_archived`' => false,
                     '`trading_line`.`exchange_id`' => $exchange->id,
                 ])
                 ->all();
@@ -448,7 +459,7 @@ class OrderController extends \yii\console\Controller
                  */
                 $orders = Order::find()
                     ->with('pair')
-                    ->joinWith('grid')
+                    ->joinWith('line')
                     ->where([
                         '`order`.`user_id`' => $user->id,
                         '`order`.`is_executed`' => true,
@@ -456,7 +467,7 @@ class OrderController extends \yii\console\Controller
                         '`order`.`is_canceled`' => false,
                     ])
                     ->andWhere([
-                        '`trading_grid`.`is_archived`' => false,
+                        '`trading_line`.`is_archived`' => false,
                         '`trading_line`.`exchange_id`' => $exchange->id,
                     ])
                     ->orderBy('executed_at')
@@ -466,6 +477,14 @@ class OrderController extends \yii\console\Controller
                  * ...и работаем с каждым таким ордером
                  */
                 foreach ($orders as $order) {
+
+                    /**
+                     * Получим данные по валютной паре ордера, для данной биржи
+                     */
+                    $pair = ExchangeCurrencyPair::findOne([
+                        'pair_id' => $order->id,
+                        'exchange_id' => $exchange->id,
+                    ]);
 
                     /**
                      * В первую очередь, отменим все неисполненные ордера в линии,
@@ -502,14 +521,14 @@ class OrderController extends \yii\console\Controller
                         'user_id' => $order->user_id,
                         'trading_line_id' => $order->trading_line_id,
                         'operation' => 'buy',
-                        'required_trading_rate' => round(($order->actual_trading_rate * 100) / (100 + $order->line->order_step), $order->pair->price_precision),
+                        'required_trading_rate' => round(($order->actual_trading_rate * 100) / (100 + $order->line->order_step), $pair->price_precision),
                     ], '');
 
                     Order::add([
                         'user_id' => $order->user_id,
                         'trading_line_id' => $order->trading_line_id,
                         'operation' => 'sell',
-                        'required_trading_rate' => round($order->actual_trading_rate + ($order->actual_trading_rate * $order->line->order_step) / 100, $order->pair->price_precision),
+                        'required_trading_rate' => round($order->actual_trading_rate + ($order->actual_trading_rate * $order->line->order_step) / 100, $pair->price_precision),
                     ], '');
 
                     /**
