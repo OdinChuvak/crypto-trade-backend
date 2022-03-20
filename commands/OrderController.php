@@ -111,7 +111,7 @@ class OrderController extends \yii\console\Controller
                      * Шлем заявку на создание ордера на бирже
                      */
                     $orderData = [
-                        'pair_id' => $pair,
+                        'pair' => $pair,
                         'quantity' => \app\helpers\Order::getQuantity($order->id),
                         'price' => $order->required_trading_rate,
                         'operation' => $order->operation,
