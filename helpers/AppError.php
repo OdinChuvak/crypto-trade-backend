@@ -56,6 +56,15 @@ class AppError
     ];
 
     /**
+     * Не указан требуемый для авторизации http-заголовок
+     */
+    const HEADER_KEY_IS_NOT_FIND = [
+        'code' => 1005,
+        'type' => 'error',
+        'message' => 'Не указан требуемый для авторизации http-заголовок'
+    ];
+
+    /**
      * Недостаточно средст
      */
     const INSUFFICIENT_FUNDS = [

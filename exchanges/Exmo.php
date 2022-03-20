@@ -25,6 +25,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     public static function getExchangeErrorMap(): array
     {
         return [
+            '40003' => AppError::HEADER_KEY_IS_NOT_FIND,
             '40005' => AppError::INCORRECT_SIGNATURE,
             '40017' => AppError::WRONG_API_KEY,
             '40030' => AppError::KEY_IS_NOT_ACTIVATED,
