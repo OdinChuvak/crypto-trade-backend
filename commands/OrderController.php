@@ -288,7 +288,7 @@ class OrderController extends \yii\console\Controller
                      * то переходим ко следующему ордеру
                      */
                     if (in_array($order->exchange_order_id, $exchangeOrderIds)) {
-                        continue 2;
+                        continue 1;
                     }
 
                     /**
@@ -524,7 +524,7 @@ class OrderController extends \yii\console\Controller
                         'trading_line_id' => $order->trading_line_id,
                         'previous_order_id' => $order->operation !== 'buy' ? $order->id : null,
                         'operation' => 'buy',
-                        'required_trading_rate' => round((1 - ($order->line->order_step / 100)) * $order->actual_trading_rate, $pair->price_precision),
+                        'required_trading_rate' => round((100 * $order->actual_trading_rate) / (100 + $order->line->order_step), $pair->price_precision),
                     ], '');
 
                     Order::add([
