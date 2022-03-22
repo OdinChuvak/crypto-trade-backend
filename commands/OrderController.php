@@ -504,7 +504,7 @@ class OrderController extends \yii\console\Controller
                          * Если ордер уже был размещен на бирже,
                          * шлем запрос на отмену
                          */
-                        if ($lineOrder->is_placed === true) {
+                        if ($lineOrder->is_placed) {
                             $EXCHANGE->cancelOrder($lineOrder->exchange_order_id);
                         }
 
