@@ -135,6 +135,6 @@ class Order extends BaseModel
 
     public function getPrevious(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Order::class, ['previous_order_id' => 'id']);
+        return $this->hasOne(Order::class, ['id' => 'previous_order_id']);
     }
 }
