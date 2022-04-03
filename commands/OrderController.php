@@ -509,6 +509,18 @@ class OrderController extends \yii\console\Controller
                         }
 
                         /**
+                         * Добавим в лог запись о том, что ордер отменен
+                         */
+                        OrderLog::add([
+                            'user_id' => $user->id,
+                            'trading_line_id' => $lineOrder->trading_line_id,
+                            'order_id' => $lineOrder->id,
+                            'type' => 'success',
+                            'message' => 'Ордер успешно отменен! (Отменивший ордер - #' . $order->id . ')',
+                            'error_code' => null,
+                        ]);
+
+                        /**
                          * Ставим метку отмененного ордера и сохраняем
                          */
                         $lineOrder->is_canceled = true;
