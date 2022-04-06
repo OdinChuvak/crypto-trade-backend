@@ -92,7 +92,7 @@ class OrderController extends \yii\console\Controller
                 $errorOrders = OrderLog::find()
                     ->select('order_id')
                     ->where(['type' => 'error'])
-                    ->andWhere(['>', 'created_at', time() - 600])
+                    ->andWhere(['>', 'created_at', date('Y-m-d H:i:s', time() - 10*60)])
                     ->distinct()
                     ->column();
 
