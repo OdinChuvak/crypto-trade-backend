@@ -12,6 +12,11 @@ use Exception;
 class OrderController extends \yii\console\Controller
 {
     /**
+     * Лимит времени в секундах, который нужно выжидать перед повторным запросом для ордеров, завершившихся с ошибкой
+     */
+    const ERROR_ORDER_REQUEST_TIME_LIMIT = 600;
+
+    /**
      * Поочередный запуск всех скриптов
      *
      * @return bool
@@ -92,7 +97,7 @@ class OrderController extends \yii\console\Controller
                 $errorOrders = OrderLog::find()
                     ->select('order_id')
                     ->where(['type' => 'error'])
-                    ->andWhere(['>', 'created_at', date('Y-m-d H:i:s', time() - 10*60)])
+                    ->andWhere(['>', 'created_at', date('Y-m-d H:i:s', time() - self::ERROR_ORDER_REQUEST_TIME_LIMIT)])
                     ->distinct()
                     ->column();
 
