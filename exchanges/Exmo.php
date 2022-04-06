@@ -28,6 +28,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
             '40005' => AppError::INCORRECT_SIGNATURE,
             '40017' => AppError::WRONG_API_KEY,
             '40030' => AppError::KEY_IS_NOT_ACTIVATED,
+            '40034' => AppError::RATE_LIMIT_IS_EXCEEDED,
             '50018' => AppError::PARAMETER_ERROR,
             '50052' => AppError::INSUFFICIENT_FUNDS,
             '50054' => AppError::INSUFFICIENT_FUNDS,

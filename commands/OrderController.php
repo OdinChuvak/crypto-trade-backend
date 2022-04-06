@@ -83,6 +83,20 @@ class OrderController extends \yii\console\Controller
                 }
 
                 /**
+                 * Ограничим запросы на ордера, которые в ближайшие 10 минут завершались ошибкой
+                 * Например, если недостаточно средств для размещения ордера, нет смысла слать запросы
+                 * на биржу каждую минуту. Это создает напрасную нагрузку.
+                 *
+                 * Вытащим идентификаторы ордеров, о которых в предыдущие 10 минут вносились логи ошибок
+                 */
+                $errorOrders = OrderLog::find()
+                    ->select('order_id')
+                    ->where(['type' => 'error'])
+                    ->andWhere(['>', 'created_at', time() - 600])
+                    ->distinct()
+                    ->column();
+
+                /**
                  * Берем все созданные не размещенные и не отмененные ордера конкретной биржи, конкретного юзера
                  */
                 $orders = Order::find()
@@ -97,6 +111,7 @@ class OrderController extends \yii\console\Controller
                         '`trading_line`.`is_archived`' => false,
                         '`trading_line`.`exchange_id`' => $exchange->id,
                     ])
+                    ->andWhere(['not in', 'id', $errorOrders])
                     ->orderBy('created_at')
                     ->all();
 

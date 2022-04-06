@@ -65,6 +65,15 @@ class AppError
     ];
 
     /**
+     * Превышена скорость запросов
+     */
+    const RATE_LIMIT_IS_EXCEEDED = [
+        'code' => 1006,
+        'type' => 'error',
+        'message' => 'Превышен лимит запросов'
+    ];
+
+    /**
      * Недостаточно средст
      */
     const INSUFFICIENT_FUNDS = [
