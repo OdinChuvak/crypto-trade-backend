@@ -111,7 +111,7 @@ class OrderController extends \yii\console\Controller
                         '`trading_line`.`is_archived`' => false,
                         '`trading_line`.`exchange_id`' => $exchange->id,
                     ])
-                    ->andWhere(['not in', 'id', $errorOrders])
+                    ->andWhere(['not in', '`order`.`id`', $errorOrders])
                     ->orderBy('created_at')
                     ->all();
 
