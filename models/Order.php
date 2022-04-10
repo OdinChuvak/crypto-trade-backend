@@ -19,6 +19,7 @@ class Order extends BaseModel
             'exchange_order_id' => 'ID ордера на криптовалютной бирже',
             'trading_line_id' => 'ID сетки ордера',
             'previous_order_id' => 'ID предыдущего ордера',
+            'continued_order_id' => 'ID продолженного ордера',
             'operation' => 'Операция производимая посредством ордера',
             'required_trading_rate' => 'Требуемый курс валюты для исполнения ордера',
             'actual_trading_rate' => 'Реальный курс исполнения ордера',
@@ -45,6 +46,7 @@ class Order extends BaseModel
                     'id',
                     'trading_line_id',
                     'previous_order_id',
+                    'continued_order_id',
                     'created_at',
                     'placed_at',
                     'executed_at',
@@ -136,5 +138,10 @@ class Order extends BaseModel
     public function getPrevious(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Order::class, ['id' => 'previous_order_id']);
+    }
+
+    public function getContinued(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(Order::class, ['id' => 'continued_order_id']);
     }
 }

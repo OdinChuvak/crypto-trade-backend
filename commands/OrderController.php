@@ -549,12 +549,16 @@ class OrderController extends \yii\console\Controller
 
                     /**
                      * Теперь создадим 2 ордера, являющиеся реакцией на исполнение
-                     * текущего ордера
+                     * текущего ордера. Прежде всего определим ордера, в продолжение которых будут созданы новые
                      */
+                    $continuedOrderForBuy = \app\helpers\Order::getContinuedOrder('buy', $order->id);
+                    $continuedOrderForSell = \app\helpers\Order::getContinuedOrder('sell', $order->id);
+
                     Order::add([
                         'user_id' => $order->user_id,
                         'trading_line_id' => $order->trading_line_id,
-                        'previous_order_id' => $order->operation !== 'buy' ? $order->id : null,
+                        'previous_order_id' => $order->id,
+                        'continued_order_id' => $continuedOrderForBuy?->id,
                         'operation' => 'buy',
                         'required_trading_rate' => round((100 * $order->actual_trading_rate) / (100 + $order->line->order_step), $pair->price_precision),
                     ], '');
@@ -562,7 +566,8 @@ class OrderController extends \yii\console\Controller
                     Order::add([
                         'user_id' => $order->user_id,
                         'trading_line_id' => $order->trading_line_id,
-                        'previous_order_id' => $order->operation !== 'sell' ? $order->id : null,
+                        'previous_order_id' => $order->id,
+                        'continued_order_id' => $continuedOrderForSell?->id,
                         'operation' => 'sell',
                         'required_trading_rate' => round((1 + ($order->line->order_step / 100)) * $order->actual_trading_rate, $pair->price_precision),
                     ], '');

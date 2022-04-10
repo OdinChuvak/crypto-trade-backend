@@ -18,6 +18,7 @@ class m211021_203148_order_table extends Migration
             'exchange_order_id' => $this->bigInteger()->null(),
             'trading_line_id' => $this->integer()->notNull(),
             'previous_order_id' => $this->integer()->null(),
+            'continued_order_id' => $this->integer()->null(),
             'operation' => $this->string(5)->notNull(),
             'required_trading_rate' => $this->double()->notNull(),
             'actual_trading_rate' => $this->double()->null(),
