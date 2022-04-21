@@ -20,13 +20,14 @@ class TradingLine extends ActiveRecord
                 [
                     'pair_id',
                     'exchange_id',
-                    'order_step',
-                    'order_amount'
+                    'step_up',
+                    'step_down',
+                    'amount'
                 ],
                 'required',
                 'message' => 'The value cannot be empty.'
             ],
-            ['order_amount', 'allowedAmount'],
+            ['amount', 'allowedAmount'],
             ['is_stopped', 'boolean', 'message' => 'This boolean value.']
         ];
     }
@@ -42,10 +43,10 @@ class TradingLine extends ActiveRecord
     {
         $pair = CurrencyPair::findOne(['id' => $this->pair_id]);
 
-        if (!($this->order_amount >= $pair->min_amount
-            && $this->order_amount <= $pair->max_amount)) {
+        if (!($this->amount >= $pair->min_amount
+            && $this->amount <= $pair->max_amount)) {
             $errorMsg = 'Invalid value for the amount field for the currency pair. The value must be between '.$pair->min_amount.' and '.$pair->max_amount.'.';
-            $this->addError('order_amount', $errorMsg);
+            $this->addError('amount', $errorMsg);
         }
     }
 

@@ -16,7 +16,7 @@ class Order
 
         /* Если предыдущий ордер не задан, вернем стандартное количество для линии */
         if (!$continuedOrder) {
-            return $line->order_amount / $order->required_trading_rate;
+            return $line->amount / $order->required_trading_rate;
         }
 
         /* Если предыдущий ордер есть, при этом операции у них равны,
@@ -37,13 +37,13 @@ class Order
         elseif ($line->trading_method === 2) {
             return $order->operation === 'buy'
                 ? $continuedOrder->received / $order->required_trading_rate
-                : $line->order_amount / $continuedOrder->required_trading_rate;
+                : $line->amount / $continuedOrder->required_trading_rate;
         }
 
         /* Если задан второй тип торговли - копить вторую валюту */
         elseif ($line->trading_method === 3) {
             return $order->operation === 'buy'
-                ? $line->order_amount / $order->required_trading_rate
+                ? $line->amount / $order->required_trading_rate
                 : $continuedOrder->received;
         }
 
