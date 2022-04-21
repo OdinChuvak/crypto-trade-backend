@@ -20,7 +20,7 @@ class m211021_201642_trading_line_table extends Migration
             'order_step' => $this->integer()->notNull(),
             'order_amount' => $this->float()->notNull(),
             'trading_method' => $this->tinyInteger(4)->notNull()->defaultValue(1),
-            'is_archived' => $this->tinyInteger(4)->notNull()->defaultValue(0),
+            'is_stopped' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);
     }

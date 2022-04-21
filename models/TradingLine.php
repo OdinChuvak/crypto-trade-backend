@@ -27,7 +27,7 @@ class TradingLine extends ActiveRecord
                 'message' => 'The value cannot be empty.'
             ],
             ['order_amount', 'allowedAmount'],
-            ['is_archived', 'boolean', 'message' => 'This boolean value.']
+            ['is_stopped', 'boolean', 'message' => 'This boolean value.']
         ];
     }
 

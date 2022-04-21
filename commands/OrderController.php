@@ -58,7 +58,7 @@ class OrderController extends \yii\console\Controller
                     '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere([
-                    '`trading_line`.`is_archived`' => false,
+                    '`trading_line`.`is_stopped`' => false,
                     '`trading_line`.`exchange_id`' => $exchange->id,
                 ])
                 ->all();
@@ -113,7 +113,7 @@ class OrderController extends \yii\console\Controller
                         '`order`.`is_canceled`' => false,
                     ])
                     ->andWhere([
-                        '`trading_line`.`is_archived`' => false,
+                        '`trading_line`.`is_stopped`' => false,
                         '`trading_line`.`exchange_id`' => $exchange->id,
                     ])
                     ->andWhere(['not in', '`order`.`id`', $errorOrders])
@@ -228,7 +228,7 @@ class OrderController extends \yii\console\Controller
                     '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere([
-                    '`trading_line`.`is_archived`' => false,
+                    '`trading_line`.`is_stopped`' => false,
                     '`trading_line`.`exchange_id`' => $exchange->id,
                 ])
                 ->all();
@@ -273,7 +273,7 @@ class OrderController extends \yii\console\Controller
                         '`order`.`is_canceled`' => false,
                     ])
                     ->andWhere([
-                        '`trading_line`.`is_archived`' => false,
+                        '`trading_line`.`is_stopped`' => false,
                         '`trading_line`.`exchange_id`' => $exchange->id,
                     ])
                     ->orderBy('placed_at')
@@ -445,7 +445,7 @@ class OrderController extends \yii\console\Controller
                     '`order`.`is_canceled`' => false,
                 ])
                 ->andWhere([
-                    '`trading_line`.`is_archived`' => false,
+                    '`trading_line`.`is_stopped`' => false,
                     '`trading_line`.`exchange_id`' => $exchange->id,
                 ])
                 ->all();
@@ -489,7 +489,7 @@ class OrderController extends \yii\console\Controller
                         '`order`.`is_canceled`' => false,
                     ])
                     ->andWhere([
-                        '`trading_line`.`is_archived`' => false,
+                        '`trading_line`.`is_stopped`' => false,
                         '`trading_line`.`exchange_id`' => $exchange->id,
                     ])
                     ->orderBy('executed_at')
