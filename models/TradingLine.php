@@ -20,8 +20,7 @@ class TradingLine extends ActiveRecord
                 [
                     'pair_id',
                     'exchange_id',
-                    'step_up',
-                    'step_down',
+                    'exchange_rate_step',
                     'amount'
                 ],
                 'required',
