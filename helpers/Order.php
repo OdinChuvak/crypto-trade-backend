@@ -22,11 +22,10 @@ class Order
          * (если предыдущий ордер на покупку, а текущий на продажу, но курс текущего меньше предыдущего, и наоборот),
          * вернем стандартное количество для линии
          */
-        if (($continuedOrder->operation === 'buy' && $continuedOrder->actual_trading_rate >= $order->required_trading_rate)
-            ||($continuedOrder->operation === 'sell' && $continuedOrder->actual_trading_rate <= $order->required_trading_rate)
-            || !$continuedOrder ) {
+        if (!$continuedOrder
+            || ($continuedOrder->operation === 'buy' && $continuedOrder->actual_trading_rate >= $order->required_trading_rate)
+            || ($continuedOrder->operation === 'sell' && $continuedOrder->actual_trading_rate <= $order->required_trading_rate))
             return $line->amount / $order->required_trading_rate;
-        }
 
         /**
          * Если предыдущий ордер есть, при этом операции у них равны,
