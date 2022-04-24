@@ -7,6 +7,8 @@ use app\helpers\Exchange;
 use app\models\ExchangeCurrencyPair;
 use app\models\Order;
 use app\models\OrderLog;
+use app\models\TradingLine;
+use app\models\TradingLineLog;
 use Exception;
 
 class OrderController extends \yii\console\Controller
@@ -501,14 +503,6 @@ class OrderController extends \yii\console\Controller
                 foreach ($orders as $order) {
 
                     /**
-                     * Получим данные по валютной паре ордера, для данной биржи
-                     */
-                    $pair = ExchangeCurrencyPair::findOne([
-                        'pair_id' => $order->line->pair_id,
-                        'exchange_id' => $exchange->id,
-                    ]);
-
-                    /**
                      * В первую очередь, отменим все неисполненные ордера в линии,
                      * так как будут созданы новые, более актуальные ордера
                      */
@@ -548,29 +542,27 @@ class OrderController extends \yii\console\Controller
                     }
 
                     /**
-                     * Теперь создадим 2 ордера, являющиеся реакцией на исполнение
-                     * текущего ордера. Прежде всего определим ордера, в продолжение которых будут созданы новые
+                     * Пытаемся создать ответные ордера для текущего исполненного
                      */
-                    $continuedOrderForBuy = \app\helpers\Order::getContinuedOrder('buy', $order->id);
-                    $continuedOrderForSell = \app\helpers\Order::getContinuedOrder('sell', $order->id);
+                    if (!\app\helpers\Order::createOrder($order, 'buy')
+                        && !\app\helpers\Order::createOrder($order, 'sell')) {
 
-                    Order::add([
-                        'user_id' => $order->user_id,
-                        'trading_line_id' => $order->trading_line_id,
-                        'previous_order_id' => $order->id,
-                        'continued_order_id' => $continuedOrderForBuy?->id,
-                        'operation' => 'buy',
-                        'required_trading_rate' => round((100 * $order->actual_trading_rate) / (100 + $order->line->exchange_rate_step), $pair->price_precision),
-                    ], '');
+                        /**
+                         * В случае, если не удалось создать ни ордера на покупку, ни ордера на продажу, остановим линию
+                         */
+                        $tradingLine = TradingLine::findOne($order->trading_line_id);
 
-                    Order::add([
-                        'user_id' => $order->user_id,
-                        'trading_line_id' => $order->trading_line_id,
-                        'previous_order_id' => $order->id,
-                        'continued_order_id' => $continuedOrderForSell?->id,
-                        'operation' => 'sell',
-                        'required_trading_rate' => round((1 + ($order->line->exchange_rate_step / 100)) * $order->actual_trading_rate, $pair->price_precision),
-                    ], '');
+                        $tradingLine->is_stopped = true;
+                        $tradingLine->save();
+
+                        TradingLineLog::add([
+                            'user_id' => $user->id,
+                            'trading_line_id' => $order->line->id,
+                            'type' => 'warning',
+                            'message' => 'Линия остановлена. Курсы ордеров вышли за допустимые границы!',
+                            'error_code' => null,
+                        ]);
+                    }
 
                     /**
                      * Далее пометим текущий ордер как продолженный и сохраним

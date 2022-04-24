@@ -2,6 +2,9 @@
 
 namespace app\helpers;
 
+use app\models\ExchangeCurrencyPair;
+use app\models\TradingLineLog;
+
 class Order
 {
     public static function getQuantity($order_id): ?float
@@ -87,5 +90,55 @@ class Order
         }
 
         return null;
+    }
+
+    public static function createOrder(\app\models\Order $previousOrder, $order_type)
+    {
+        /**
+         * Получим данные по валютной паре ордера
+         */
+        $pair = ExchangeCurrencyPair::findOne([
+            'pair_id' => $previousOrder->line->pair_id,
+            'exchange_id' => $previousOrder->line->exchange_id,
+        ]);
+
+        /**
+         * Рассчитаем курс для текущей операции
+         */
+        $order_rate = $order_type === 'buy' ? round((100 * $previousOrder->actual_trading_rate) / (100 + $previousOrder->line->exchange_rate_step), $pair->price_precision)
+            : round((1 + ($previousOrder->line->exchange_rate_step / 100)) * $previousOrder->actual_trading_rate, $pair->price_precision);
+
+        /**
+         * Если курс в допустимых рамках, создадим ордер
+         */
+        if ($order_rate >= $pair->limits->lower_limit && $order_rate <= $pair->limits->upper_limit) {
+            $continuedOrderForBuy = self::getContinuedOrder('buy', $previousOrder->id);
+
+            \app\models\Order::add([
+                'user_id' => $previousOrder->user_id,
+                'trading_line_id' => $previousOrder->trading_line_id,
+                'previous_order_id' => $previousOrder->id,
+                'continued_order_id' => $continuedOrderForBuy?->id,
+                'operation' => $order_type,
+                'required_trading_rate' => $order_rate,
+            ], '');
+
+        } else {
+
+            /**
+             * Если курс вышел за допустимые рамки, пишем лог
+             */
+            TradingLineLog::add([
+                'user_id' => $previousOrder->user_id,
+                'trading_line_id' => $previousOrder->line->id,
+                'type' => 'warning',
+                'message' => 'Ордер' . $order_type === 'buy' ? 'на покупку' : 'на продажу' . ' не создан, так как курс ордера вышел за допустимые границы!',
+                'error_code' => null,
+            ]);
+
+            return false;
+        }
+
+        return true;
     }
 }

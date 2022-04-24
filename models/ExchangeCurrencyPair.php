@@ -72,4 +72,9 @@ class ExchangeCurrencyPair extends BaseModel
     {
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);
     }
+
+    public function getLimits(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(ExchangeRateLimits::class, ['first_currency' => 'first_currency', 'second_currency' => 'second_currency']);
+    }
 }
