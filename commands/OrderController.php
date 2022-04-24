@@ -560,7 +560,7 @@ class OrderController extends \yii\console\Controller
                         'previous_order_id' => $order->id,
                         'continued_order_id' => $continuedOrderForBuy?->id,
                         'operation' => 'buy',
-                        'required_trading_rate' => round((100 * $order->actual_trading_rate) / (100 + $order->line->step_down), $pair->price_precision),
+                        'required_trading_rate' => round((100 * $order->actual_trading_rate) / (100 + $order->line->exchange_rate_step), $pair->price_precision),
                     ], '');
 
                     Order::add([
@@ -569,7 +569,7 @@ class OrderController extends \yii\console\Controller
                         'previous_order_id' => $order->id,
                         'continued_order_id' => $continuedOrderForSell?->id,
                         'operation' => 'sell',
-                        'required_trading_rate' => round((1 + ($order->line->step_up / 100)) * $order->actual_trading_rate, $pair->price_precision),
+                        'required_trading_rate' => round((1 + ($order->line->exchange_rate_step / 100)) * $order->actual_trading_rate, $pair->price_precision),
                     ], '');
 
                     /**
