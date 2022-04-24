@@ -10,40 +10,54 @@ class Order
     public static function getQuantity($order_id): ?float
     {
         $order = \app\models\Order::find()
-            ->with(['line', 'previous'])
+            ->with(['line', 'continued'])
             ->where(['id' => $order_id])
             ->one();
 
         $line = $order->line;
         $continuedOrder = $order->continued;
 
-        /* Если предыдущий ордер не задан, вернем стандартное количество для линии */
-        if (!$continuedOrder) {
+        /**
+         * Если предыдущий ордер не задан, или курс предыдущего ордера не корректен
+         * (если предыдущий ордер на покупку, а текущий на продажу, но курс текущего меньше предыдущего, и наоборот),
+         * вернем стандартное количество для линии
+         */
+        if (($continuedOrder->operation === 'buy' && $continuedOrder->actual_trading_rate >= $order->required_trading_rate)
+            ||($continuedOrder->operation === 'sell' && $continuedOrder->actual_trading_rate <= $order->required_trading_rate)
+            || !$continuedOrder ) {
             return $line->amount / $order->required_trading_rate;
         }
 
-        /* Если предыдущий ордер есть, при этом операции у них равны,
+        /**
+         * Если предыдущий ордер есть, при этом операции у них равны,
          * значит, что-то пошло не так. Вернем null,
-         * чтобы вызвать ошибку запроса */
+         * чтобы вызвать ошибку запроса
+         */
         if ($order->operation === $continuedOrder->operation) {
             return null;
         }
 
-        /* Если задан первый тип торговли - торговать на все */
+        /**
+         * Если задан первый тип торговли - торговать на все
+         */
         if ($line->trading_method === 1) {
             return $order->operation === 'buy'
                 ? $continuedOrder->received / $order->required_trading_rate
                 : $continuedOrder->received;
         }
 
-        /* Если задан второй тип торговли - копить первую валюту */
+        /**
+         * Если задан второй тип торговли - копить первую валюту
+         */
         elseif ($line->trading_method === 2) {
             return $order->operation === 'buy'
                 ? $continuedOrder->received / $order->required_trading_rate
-                : $line->amount / $continuedOrder->required_trading_rate;
+                : $line->amount / $order->required_trading_rate;
         }
 
-        /* Если задан второй тип торговли - копить вторую валюту */
+        /**
+         * Если задан второй тип торговли - копить вторую валюту
+         */
         elseif ($line->trading_method === 3) {
             return $order->operation === 'buy'
                 ? $line->amount / $order->required_trading_rate
@@ -92,7 +106,14 @@ class Order
         return null;
     }
 
-    public static function createOrder(\app\models\Order $previousOrder, $order_type)
+    /**
+     * Пытается создать ордер для предыдущего ордера с учетом допустимых рамок для курса в валютной паре
+     *
+     * @param \app\models\Order $previousOrder
+     * @param $order_type
+     * @return bool
+     */
+    public static function createOrder(\app\models\Order $previousOrder, $order_type): bool
     {
         /**
          * Получим данные по валютной паре ордера
