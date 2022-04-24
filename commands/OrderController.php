@@ -544,8 +544,10 @@ class OrderController extends \yii\console\Controller
                     /**
                      * Пытаемся создать ответные ордера для текущего исполненного
                      */
-                    if (!\app\helpers\Order::createOrder($order, 'buy')
-                        && !\app\helpers\Order::createOrder($order, 'sell')) {
+                    $is_buy_order_create = \app\helpers\Order::createOrder($order, 'buy');
+                    $is_sell_order_create = \app\helpers\Order::createOrder($order, 'sell');
+
+                    if (!$is_buy_order_create && !$is_sell_order_create) {
 
                         /**
                          * В случае, если не удалось создать ни ордера на покупку, ни ордера на продажу, остановим линию
