@@ -132,13 +132,13 @@ class Order
          * Если курс в допустимых рамках, создадим ордер
          */
         if ($order_rate >= $pair->limits->lower_limit && $order_rate <= $pair->limits->upper_limit) {
-            $continuedOrderForBuy = self::getContinuedOrder('buy', $previousOrder->id);
+            $continuedOrder = self::getContinuedOrder($order_type, $previousOrder->id);
 
             \app\models\Order::add([
                 'user_id' => $previousOrder->user_id,
                 'trading_line_id' => $previousOrder->trading_line_id,
                 'previous_order_id' => $previousOrder->id,
-                'continued_order_id' => $continuedOrderForBuy?->id,
+                'continued_order_id' => $continuedOrder?->id,
                 'operation' => $order_type,
                 'required_trading_rate' => $order_rate,
             ], '');
