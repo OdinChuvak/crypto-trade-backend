@@ -547,25 +547,6 @@ class OrderController extends \yii\console\Controller
                     $is_buy_order_create = \app\helpers\Order::createOrder($order, 'buy');
                     $is_sell_order_create = \app\helpers\Order::createOrder($order, 'sell');
 
-                    if (!$is_buy_order_create && !$is_sell_order_create) {
-
-                        /**
-                         * В случае, если не удалось создать ни ордера на покупку, ни ордера на продажу, остановим линию
-                         */
-                        $tradingLine = TradingLine::findOne($order->trading_line_id);
-
-                        $tradingLine->is_stopped = true;
-                        $tradingLine->save();
-
-                        TradingLineLog::add([
-                            'user_id' => $user->id,
-                            'trading_line_id' => $order->line->id,
-                            'type' => 'warning',
-                            'message' => 'Линия остановлена. Курсы ордеров вышли за допустимые границы!',
-                            'error_code' => null,
-                        ]);
-                    }
-
                     /**
                      * Далее пометим текущий ордер как продолженный и сохраним
                      */
