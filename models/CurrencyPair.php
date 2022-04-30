@@ -20,12 +20,12 @@ class CurrencyPair extends BaseModel
         ];
     }
 
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'currency_pair';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [

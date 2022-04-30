@@ -16,7 +16,7 @@ class DoController extends Controller
      *
      * @throws NotFoundHttpException
      */
-    public function actionSetUserPassword($email, $password)
+    public function actionSetUserPassword($email, $password): bool
     {
         $user = User::findOne(['email' => $email]);
 

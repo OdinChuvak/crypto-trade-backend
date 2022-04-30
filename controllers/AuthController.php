@@ -35,7 +35,7 @@ class AuthController extends BaseApiController
         }
     }
 
-    public function actionLogout()
+    public function actionLogout(): int
     {
         $identity = \Yii::$app->user->identity->getId();
 

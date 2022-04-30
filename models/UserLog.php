@@ -6,12 +6,12 @@ use app\helpers\FunctionBox;
 
 class UserLog extends BaseModel
 {
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'user_log';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],

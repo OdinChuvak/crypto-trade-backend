@@ -9,7 +9,7 @@ class CurrencyPairController extends BaseApiController
 {
     public $modelClass = CurrencyPair::class;
 
-    public function actions()
+    public function actions(): array
     {
         $actions = parent::actions();
         $actions['index']['class'] = IndexAction::class;

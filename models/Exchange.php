@@ -2,6 +2,8 @@
 
 namespace app\models;
 
+use JetBrains\PhpStorm\ArrayShape;
+
 class Exchange extends BaseModel
 {
     public static function tableName(): string
@@ -17,7 +19,7 @@ class Exchange extends BaseModel
         ];
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [

@@ -9,7 +9,7 @@ class TradingGridController extends BaseApiController
 {
     public $modelClass = TradingLine::class;
 
-    public function actions()
+    public function actions(): array
     {
         $actions = parent::actions();
         $actions['index']['class'] = IndexAction::class;

@@ -7,12 +7,12 @@ use \yii\db\ActiveRecord;
 
 class TradingLine extends ActiveRecord
 {
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'trading_line';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
@@ -49,7 +49,7 @@ class TradingLine extends ActiveRecord
         }
     }
 
-    public function getPair()
+    public function getPair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);
     }

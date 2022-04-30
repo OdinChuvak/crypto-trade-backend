@@ -70,7 +70,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public function cancelOrder(int $exchange_order_id)
+    public function cancelOrder(int $exchange_order_id): mixed
     {
         return $this->sendPrivateQuery('order_cancel', [
             'order_id' => $exchange_order_id

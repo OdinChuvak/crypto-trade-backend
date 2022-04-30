@@ -34,7 +34,7 @@ class BaseApiController extends ActiveController
         'collectionEnvelope' => 'items',
     ];
 
-    public static function getRequestParams()
+    public static function getRequestParams(): object|array
     {
         $requestParams = \Yii::$app->getRequest()->getBodyParams();
         if (empty($requestParams)) {

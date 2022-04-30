@@ -9,7 +9,7 @@ class ExchangeRateLimits extends BaseModel
         return 'exchange_rate_limits';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [

@@ -16,7 +16,7 @@ class FunctionBox
      * метод вернет null. Например, в консольных командах, где не подключен
      * компонент user.
      */
-    public static function getIdentityId()
+    public static function getIdentityId(): int|string|null
     {
         return isset(\Yii::$app->user) ? \Yii::$app->user->getId() : null;
     }

@@ -6,12 +6,12 @@ use app\helpers\FunctionBox;
 
 class TradingLineLog extends BaseModel
 {
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'trading_line_log';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             ['user_id', 'default', 'value' => FunctionBox::getIdentityId()],
