@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use yii\base\InvalidConfigException;
 use yii\filters\auth\HttpBearerAuth;
 use yii\filters\Cors;
 use yii\rest\ActiveController;
@@ -34,7 +35,10 @@ class BaseApiController extends ActiveController
         'collectionEnvelope' => 'items',
     ];
 
-    public static function getRequestParams(): object|array
+    /**
+     * @throws InvalidConfigException
+     */
+    public static function getRequestParams()
     {
         $requestParams = \Yii::$app->getRequest()->getBodyParams();
         if (empty($requestParams)) {

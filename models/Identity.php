@@ -6,12 +6,12 @@ use yii\web\IdentityInterface;
 
 class Identity extends User implements IdentityInterface
 {
-    public static function findIdentity($id): Identity|IdentityInterface|null
+    public static function findIdentity($id)
     {
         return self::findOne(['id' => $id]);
     }
 
-    public static function findIdentityByAccessToken($token, $type = null): Identity|IdentityInterface|null
+    public static function findIdentityByAccessToken($token, $type = null)
     {
         return self::findOne(['access_token' => $token]);
     }
