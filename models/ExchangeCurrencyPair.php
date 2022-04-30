@@ -68,6 +68,14 @@ class ExchangeCurrencyPair extends BaseModel
         ];
     }
 
+    public function extraFields(): array
+    {
+        return [
+            'pair',
+            'limits',
+        ];
+    }
+
     public function getPair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);

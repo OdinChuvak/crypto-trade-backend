@@ -34,7 +34,8 @@ class TradingLine extends ActiveRecord
     public function extraFields(): array
     {
         return [
-            'pair'
+            'pair',
+            'exchangePair',
         ];
     }
 
@@ -52,5 +53,13 @@ class TradingLine extends ActiveRecord
     public function getPair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);
+    }
+
+    public function getExchangePair(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(ExchangeCurrencyPair::class, [
+            'pair_id' => 'pair_id',
+            'exchange_id' => 'exchange_id',
+        ]);
     }
 }
