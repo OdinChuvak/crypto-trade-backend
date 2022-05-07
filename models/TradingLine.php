@@ -36,6 +36,7 @@ class TradingLine extends ActiveRecord
         return [
             'pair',
             'exchangePair',
+            'currentOrders',
         ];
     }
 
@@ -61,5 +62,11 @@ class TradingLine extends ActiveRecord
             'pair_id' => 'pair_id',
             'exchange_id' => 'exchange_id',
         ]);
+    }
+
+    public function getCurrentOrders(): \yii\db\ActiveQuery
+    {
+        return $this->hasMany(Order::class, ['trading_line_id' => 'id'])
+            ->onCondition(['is_canceled' => false, 'is_continued' => false]);
     }
 }
