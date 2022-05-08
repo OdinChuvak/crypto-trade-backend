@@ -51,7 +51,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     /**
      * @throws Exception
      */
-    public function getTicker(): array
+    public static function getTicker(): array
     {
         $exchangeTicker = self::sendPublicQuery('ticker', []);
         $ticker = [];

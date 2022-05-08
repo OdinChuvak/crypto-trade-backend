@@ -20,7 +20,7 @@ interface ExchangeInterface
     public static function getExchangeErrorCode(string $error_message) : int;
 
     /** Возвращает список всех валютных пар биржи с актуальными курсами валют */
-    public function getTicker(): array;
+    public static function getTicker(): array;
 
     /** Создаст ордер на бирже */
     public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array;
