@@ -3,6 +3,7 @@
 namespace app\models;
 
 use app\helpers\FunctionBox;
+use yii\db\ActiveQuery;
 use \yii\db\ActiveRecord;
 
 class TradingLine extends ActiveRecord
@@ -36,6 +37,7 @@ class TradingLine extends ActiveRecord
         return [
             'pair',
             'exchangePair',
+            'exchangeRate',
             'currentOrders',
         ];
     }
@@ -62,6 +64,16 @@ class TradingLine extends ActiveRecord
             'pair_id' => 'pair_id',
             'exchange_id' => 'exchange_id',
         ]);
+    }
+
+    public function getExchangeRate(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(ExchangeRate::class, [
+                'pair_id' => 'pair_id',
+                'exchange_id' => 'exchange_id',
+            ])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->limit(1);
     }
 
     public function getCurrentOrders(): \yii\db\ActiveQuery
