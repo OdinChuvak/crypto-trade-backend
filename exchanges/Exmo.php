@@ -38,7 +38,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     }
 
     /**
-     * @param mixed $errorApiData
+     * @param string $error_message
      * @return int
      */
     public static function getExchangeErrorCode(string $error_message): int
@@ -46,6 +46,27 @@ class Exmo extends BaseExchange implements ExchangeInterface
         preg_match('/\d{5}/', $error_message, $exchange_error_code);
 
         return $exchange_error_code[0];
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getTicker(): array
+    {
+        $exchangeTicker = self::sendPublicQuery('ticker', []);
+        $ticker = [];
+
+        foreach ($exchangeTicker as $pair => $data) {
+            $pair = explode('_', $pair);
+
+            $ticker[] = [
+                'first_currency' => $pair[0],
+                'second_currency' => $pair[1],
+                'exchange_rate' => $data['last_trade'],
+            ];
+        }
+
+        return $ticker;
     }
 
     /**

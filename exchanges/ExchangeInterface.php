@@ -19,6 +19,9 @@ interface ExchangeInterface
     /** Вернет код ошибки из данных, полученных в результате неудачного api-запроса */
     public static function getExchangeErrorCode(string $error_message) : int;
 
+    /** Возвращает список всех валютных пар биржи с актуальными курсами валют */
+    public function getTicker(): array;
+
     /** Создаст ордер на бирже */
     public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array;
 

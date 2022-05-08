@@ -1,0 +1,39 @@
+<?php
+
+namespace app\models;
+
+class ExchangeRate extends BaseModel
+{
+    public static function tableName(): string
+    {
+        return 'exchange_rate';
+    }
+
+    public function rules(): array
+    {
+        return [
+            [
+                [
+                    'first_currency',
+                    'second_currency'
+                ],
+                'string'
+            ],
+            [
+                [
+                    'id',
+                    'exchange_id',
+                    'pair_id',
+                ],
+                'safe'
+            ],
+            [
+                [
+                    'exchange_rate',
+                ],
+                'double',
+                'message' => 'The value must be a floating point number.',
+            ],
+        ];
+    }
+}
