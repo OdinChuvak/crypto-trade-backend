@@ -75,7 +75,7 @@ class ExchangeRateController extends \yii\console\Controller
                             'pair_id' => $pair->pair_id,
                             'first_currency' => $tickerItem['first_currency'],
                             'second_currency' => $tickerItem['second_currency'],
-                            'exchange_rate' => $tickerItem['exchange_rate'],
+                            'value' => $tickerItem['exchange_rate'],
                         ], '');
 
                         $exchangeRate->save();

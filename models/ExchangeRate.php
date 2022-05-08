@@ -29,7 +29,7 @@ class ExchangeRate extends BaseModel
             ],
             [
                 [
-                    'exchange_rate',
+                    'value',
                 ],
                 'double',
                 'message' => 'The value must be a floating point number.',
