@@ -14,18 +14,19 @@ class ExchangeRate extends BaseModel
         return [
             [
                 [
-                    'first_currency',
-                    'second_currency'
-                ],
-                'string'
-            ],
-            [
-                [
                     'id',
                     'exchange_id',
                     'pair_id',
                 ],
                 'safe'
+            ],
+            [
+                [
+                    'rate_dynamic'
+                ],
+                'integer',
+                'min' => -1,
+                'max' => 1
             ],
             [
                 [
