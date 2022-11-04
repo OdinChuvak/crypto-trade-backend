@@ -17,9 +17,9 @@ class m211021_201642_trading_line_table extends Migration
             'exchange_id' => $this->integer()->notNull(),
             'user_id' => $this->integer()->notNull(),
             'pair_id' => $this->integer()->notNull(),
-            'exchange_rate_step' => $this->integer()->notNull(),
-            'amount' => $this->float()->notNull(),
-            'trading_method' => $this->tinyInteger(4)->notNull()->defaultValue(1),
+            'sell_rate_step' => $this->integer()->notNull(),
+            'buy_rate_step' => $this->integer()->notNull(),
+            'first_order_amount' => $this->float()->notNull(),
             'is_stopped' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);

@@ -21,13 +21,14 @@ class TradingLine extends ActiveRecord
                 [
                     'pair_id',
                     'exchange_id',
-                    'exchange_rate_step',
-                    'amount'
+                    'sell_rate_step',
+                    'buy_rate_step',
+                    'first_order_amount'
                 ],
                 'required',
                 'message' => 'The value cannot be empty.'
             ],
-            ['amount', 'allowedAmount'],
+            ['first_order_amount', 'allowedAmount'],
             ['is_stopped', 'boolean', 'message' => 'This boolean value.']
         ];
     }
