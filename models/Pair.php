@@ -3,10 +3,9 @@
 namespace app\models;
 
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveRecord;
 use yii\db\Expression;
 
-class CurrencyPair extends BaseModel
+class Pair extends BaseModel
 {
     public function behaviors(): array
     {
@@ -22,7 +21,7 @@ class CurrencyPair extends BaseModel
 
     public static function tableName(): string
     {
-        return 'currency_pair';
+        return 'pair';
     }
 
     public function rules(): array

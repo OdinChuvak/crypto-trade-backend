@@ -3,16 +3,16 @@
 use yii\db\Migration;
 
 /**
- * Class m211021_200905_currency_pair_table
+ * Class m211021_200905_pair_table
  */
-class m211021_200905_currency_pair_table extends Migration
+class m211021_200905_pair_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('currency_pair', [
+        $this->createTable('pair', [
             'id' => $this->primaryKey(),
             'name' => $this->string(15)->notNull(),
             'updated_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
@@ -25,6 +25,6 @@ class m211021_200905_currency_pair_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('currency_pair');
+        $this->dropTable('pair');
     }
 }
