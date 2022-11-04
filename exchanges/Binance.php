@@ -149,7 +149,6 @@ class Binance extends BaseExchange implements ExchangeInterface
     {
         $timestamp = time() * 1000;
         $payload['timestamp'] = $timestamp;
-        $payload['recvWindow'] = 60000;
         $queryString = http_build_query($payload, '', '&');
 
         $sign = hash_hmac('SHA256', $queryString, $this->userKeys->secret);
