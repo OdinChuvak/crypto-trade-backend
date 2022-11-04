@@ -13,7 +13,15 @@ class Exmo extends BaseExchange implements ExchangeInterface
     /**
      * @inheritDoc
      */
-    public static function getApiUrl(): string
+    public static function getPublicApiUrl(): string
+    {
+        return 'https://api.exmo.com/v1.1/';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function getPrivateApiUrl(): string
     {
         return 'https://api.exmo.com/v1.1/';
     }
@@ -41,9 +49,9 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @param string $error_message
      * @return int
      */
-    public static function getExchangeErrorCode(string $error_message): int
+    public static function getExchangeErrorCode(array $error_data): int
     {
-        preg_match('/\d{5}/', $error_message, $exchange_error_code);
+        preg_match('/\d{5}/', $error_data['error'], $exchange_error_code);
 
         return $exchange_error_code[0];
     }
@@ -192,7 +200,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public function sendPrivateQuery(string $api_name, array $payload = [])
+    public function sendPrivateQuery(string $api_name, array $payload = [], string $method = 'POST')
     {
         $mt = explode(' ', microtime());
         $nonce = $mt[1] . substr($mt[0], 2, 6);
@@ -210,7 +218,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
         ];
 
         // шлем запрос
-        $res = CurlClient::sendQuery(self::getApiUrl() . $api_name, $payload, $headers);
+        $res = CurlClient::sendQuery(self::getPrivateApiUrl() . $api_name, $payload, $headers);
         $dec = json_decode($res, true);
 
         if ($dec === null) {
@@ -227,7 +235,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     public static function sendPublicQuery(string $api_name, array $payload)
     {
         $curlOptions = ['CURLOPT_POST' => false];
-        $apiData = CurlClient::sendQuery(self::getApiUrl() . $api_name, $payload, [], $curlOptions);
+        $apiData = CurlClient::sendQuery(self::getPublicApiUrl() . $api_name, $payload, [], $curlOptions);
         $apiData = json_decode($apiData, true);
 
         return self::getResponse($apiData);
@@ -240,7 +248,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     {
         // если запрос завершился неудачей, выбросим исключение
         if (isset($apiData['result']) && !$apiData['result']) {
-            $error = self::getExchangeErrorMap()[self::getExchangeErrorCode($apiData['error'])];
+            $error = self::getExchangeErrorMap()[self::getExchangeErrorCode($apiData)];
             throw new ApiException($error['message'], $error['code']);
         }
 

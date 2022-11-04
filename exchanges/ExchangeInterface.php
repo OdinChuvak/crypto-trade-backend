@@ -9,14 +9,17 @@ interface ExchangeInterface
     /** Получит ключи доступа к API биржи, для переданного юзера */
     public function __construct($user_id);
 
-    /** Вернет URL API биржи */
-    public static function getApiUrl(): string;
+    /** Вернет URL публичного API биржи */
+    public static function getPublicApiUrl(): string;
+
+    /** Вернет URL приватного API биржи */
+    public static function getPrivateApiUrl(): string;
 
     /** Вернет название объект типа DataMapperInterface */
     public static function getExchangeErrorMap(): array;
 
     /** Вернет код ошибки из данных, полученных в результате неудачного api-запроса */
-    public static function getExchangeErrorCode(string $error_message) : int;
+    public static function getExchangeErrorCode(array $error_data) : int;
 
     /** Возвращает список всех валютных пар биржи с актуальными курсами валют */
     public static function getTicker(): array;
@@ -37,7 +40,7 @@ interface ExchangeInterface
     public function getOrderTrades(int $exchange_order_id): array;
 
     /** Отправит приватный запрос на биржу, получит ответ и обработает его */
-    public function sendPrivateQuery(string $api_name, array $payload);
+    public function sendPrivateQuery(string $api_name, array $payload, string $method);
 
     /** Отправит публичный запрос на биржу, получит ответ и обработает его */
     public static function sendPublicQuery(string $api_name, array $payload);
