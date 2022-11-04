@@ -25,7 +25,7 @@ class CurlClient implements HttpClientInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function sendQuery(string $path, array $payload = [], array $headers = [], array $params = []): bool|string
+    public static function sendQuery(string $url, array $payload = [], array $headers = [], array $params = []): bool|string
     {
         static $curl = null;
         $defaultOptions = self::getDefaultCurlOptions();
@@ -41,15 +41,18 @@ class CurlClient implements HttpClientInterface
                 $params['CURLOPT_USERAGENT'] ?? $defaultOptions['CURLOPT_USERAGENT']);
         }
 
-        curl_setopt($curl, CURLOPT_URL, $path);
-        curl_setopt($curl, CURLOPT_POST, $isPostQuery);
+        $query_params = http_build_query($payload, '', '&');
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
         if ($isPostQuery) {
-            $post_data = http_build_query($payload, '', '&');
-
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $query_params);
+        } else {
+            $url .= '?' . $query_params;
         }
+
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_POST, $isPostQuery);
 
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER,
             $params['CURLOPT_SSL_VERIFYPEER'] ?? $defaultOptions['CURLOPT_SSL_VERIFYPEER']);
