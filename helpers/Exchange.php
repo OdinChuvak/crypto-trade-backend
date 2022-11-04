@@ -2,13 +2,15 @@
 
 namespace app\helpers;
 
+use app\exchanges\Binance;
 use app\exchanges\Exmo;
 use Exception;
 
 class Exchange
 {
     public static array $exchanges = [
-        1 => Exmo::class
+        1 => Exmo::class,
+        2 => Binance::class,
     ];
 
     /**
