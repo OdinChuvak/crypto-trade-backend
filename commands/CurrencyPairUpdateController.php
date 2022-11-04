@@ -22,7 +22,10 @@ class CurrencyPairUpdateController extends Controller
      */
     public function actionIndex()
     {
-        $exchangeModels = Exchange::find()->all();
+        $exchangeModels = Exchange::find()
+            ->where(['is_disabled' => 0])
+            ->all();
+
         $exchangePairsList = [];
 
         foreach ($exchangeModels as $exchangeModel) {
@@ -44,18 +47,18 @@ class CurrencyPairUpdateController extends Controller
 
             foreach ($exchangePairsList as $exKey => $exchangePair) {
                 foreach ($exchangePairsListFromDB as $dbKey => $exchangePairFromDB) {
-                    /* Если в БД уже есть валютная пара */
-                    if (($exchangePairFromDB->pair->name === $exchangePair['first_currency'] . '/' . $exchangePair['second_currency'])
-                        || ($exchangePairFromDB->pair->name === $exchangePair['second_currency'] . '/' . $exchangePair['first_currency'])) {
-                        /* Проверим, дату последнего обновления. Если она больше суток, обновим данные валютной пары */
-                        if (strtotime($exchangePairFromDB->updated_at) < (time() - 60*60*24)) {
-                            $exchangePair['exchange_id'] = $exchangeModel->id;
-                            $exchangePair['pair_id'] = $exchangePairFromDB->pair->id;
 
-                            $exchangePairFromDB->load($exchangePair, '');
-                            $exchangePairFromDB->updated_at = null;
-                            $exchangePairFromDB->save();
-                        }
+                    $pairName = $exchangePair['first_currency'] . '/' . $exchangePair['second_currency'];
+
+                    /* Если в БД уже есть валютная пара */
+                    if ($exchangePairFromDB->pair->name === $pairName) {
+
+                        $exchangePair['exchange_id'] = $exchangeModel->id;
+                        $exchangePair['pair_id'] = $exchangePairFromDB->pair->id;
+
+                        $exchangePairFromDB->load($exchangePair, '');
+                        $exchangePairFromDB->updated_at = null;
+                        $exchangePairFromDB->save();
 
                         /* Удалим, чтобы узнать, каких пар нет в БД */
                         unset($exchangePairsList[$exKey]);
@@ -70,7 +73,11 @@ class CurrencyPairUpdateController extends Controller
 
             /* Запишем новые валютные пары */
             foreach ($exchangePairsList as $exchangePair) {
-                $newPair = Pair::add(['name' => $exchangePair['first_currency'] . '/' . $exchangePair['second_currency']]);
+                $newPair = Pair::add([
+                    'name' => $exchangePair['first_currency'] . '/' . $exchangePair['second_currency'],
+                    'first_currency' => $exchangePair['first_currency'],
+                    'second_currency' => $exchangePair['second_currency'],
+                ]);
 
                 $exchangePair['exchange_id'] = $exchangeModel->id;
                 $exchangePair['pair_id'] = $newPair->id;
