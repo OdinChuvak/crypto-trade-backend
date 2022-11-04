@@ -29,6 +29,13 @@ class Pair extends BaseModel
         return [
             [
                 [
+                    'first_currency',
+                    'second_currency'
+                ],
+                'string'
+            ],
+            [
+                [
                     'name',
                 ],
                 'string'
@@ -47,6 +54,18 @@ class Pair extends BaseModel
                 'datetime',
                 'format' => 'php:Y-m-d H:i:s'
             ],
+        ];
+    }
+
+    public function attributeLabels(): array
+    {
+        return [
+            'id' => 'ID',
+            'name' => 'Идентификатор валютной пары. Например, BTC/USD',
+            'first_currency' => 'Идентификатор первой валюты в паре',
+            'second_currency' => 'Идентификатор второй валюты в паре',
+            'updated_at' => 'Временная метка последнего изменения',
+            'created_at' => 'Временная метка создания',
         ];
     }
 }

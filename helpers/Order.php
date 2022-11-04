@@ -2,7 +2,7 @@
 
 namespace app\helpers;
 
-use app\models\ExchangeCurrencyPair;
+use app\models\ExchangePair;
 use app\models\TradingLineLog;
 
 class Order
@@ -117,7 +117,7 @@ class Order
         /**
          * Получим данные по валютной паре ордера
          */
-        $pair = ExchangeCurrencyPair::findOne([
+        $pair = ExchangePair::findOne([
             'pair_id' => $previousOrder->line->pair_id,
             'exchange_id' => $previousOrder->line->exchange_id,
         ]);

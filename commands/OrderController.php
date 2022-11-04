@@ -4,7 +4,7 @@ namespace app\commands;
 
 use app\exceptions\ApiException;
 use app\helpers\Exchange;
-use app\models\ExchangeCurrencyPair;
+use app\models\ExchangePair;
 use app\models\Order;
 use app\models\OrderLog;
 use app\models\TradingLine;
@@ -127,7 +127,7 @@ class OrderController extends \yii\console\Controller
                     /**
                      * Получим данные по валютной паре ордера, для данной биржи
                      */
-                    $pair = ExchangeCurrencyPair::findOne([
+                    $pair = ExchangePair::findOne([
                         'pair_id' => $order->line->pair_id,
                         'exchange_id' => $exchange->id,
                     ]);
@@ -295,7 +295,7 @@ class OrderController extends \yii\console\Controller
                     /**
                      * Получим данные по валютной паре ордера, для данной биржи
                      */
-                    $pair = ExchangeCurrencyPair::findOne([
+                    $pair = ExchangePair::findOne([
                         'pair_id' => $order->line->pair_id,
                         'exchange_id' => $exchange->id,
                     ]);

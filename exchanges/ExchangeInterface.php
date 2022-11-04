@@ -2,8 +2,7 @@
 
 namespace app\exchanges;
 
-use app\dto\ExchangeOrder;
-use app\models\ExchangeCurrencyPair;
+use app\models\ExchangePair;
 
 interface ExchangeInterface
 {
@@ -23,7 +22,7 @@ interface ExchangeInterface
     public static function getTicker(): array;
 
     /** Создаст ордер на бирже */
-    public function createOrder(ExchangeCurrencyPair $pair, float $quantity, float $price, string $operation): array;
+    public function createOrder(ExchangePair $pair, float $quantity, float $price, string $operation): array;
 
     /** Отменит ордер на бирже */
     public function cancelOrder(int $exchange_order_id);

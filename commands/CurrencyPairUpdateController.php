@@ -3,9 +3,9 @@
 namespace app\commands;
 
 use app\exceptions\ApiException;
-use app\models\CurrencyPair;
+use app\models\Pair;
 use app\models\Exchange;
-use app\models\ExchangeCurrencyPair;
+use app\models\ExchangePair;
 use Exception;
 use \yii\console\Controller;
 
@@ -34,7 +34,7 @@ class CurrencyPairUpdateController extends Controller
                 continue;
             }
 
-            $exchangePairsListFromDB = ExchangeCurrencyPair::find()
+            $exchangePairsListFromDB = ExchangePair::find()
                 ->with('pair')
                 ->where([
                     'exchange_id' => $exchangeModel->id,
@@ -70,12 +70,12 @@ class CurrencyPairUpdateController extends Controller
 
             /* Запишем новые валютные пары */
             foreach ($exchangePairsList as $exchangePair) {
-                $newPair = CurrencyPair::add(['name' => $exchangePair['first_currency'] . '/' . $exchangePair['second_currency']]);
+                $newPair = Pair::add(['name' => $exchangePair['first_currency'] . '/' . $exchangePair['second_currency']]);
 
                 $exchangePair['exchange_id'] = $exchangeModel->id;
                 $exchangePair['pair_id'] = $newPair->id;
 
-                ExchangeCurrencyPair::add($exchangePair);
+                ExchangePair::add($exchangePair);
             }
 
             /* Если данные по валютной паре перестали поступать и не обновлялись больше полу года,

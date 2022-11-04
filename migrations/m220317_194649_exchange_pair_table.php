@@ -3,21 +3,19 @@
 use yii\db\Migration;
 
 /**
- * Class m220317_194649_exchange_currency_pair_table
+ * Class m220317_194649_exchange_pair_table
  */
-class m220317_194649_exchange_currency_pair_table extends Migration
+class m220317_194649_exchange_pair_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('exchange_currency_pair', [
+        $this->createTable('exchange_pair', [
             'id' => $this->primaryKey(),
             'exchange_id' => $this->integer()->notNull(),
             'pair_id' => $this->integer()->notNull(),
-            'first_currency' => $this->string(15)->notNull(),
-            'second_currency' => $this->string(15)->notNull(),
             'min_quantity' => $this->double()->notNull(),
             'max_quantity' => $this->double()->notNull(),
             'min_price' => $this->double()->notNull(),
@@ -38,6 +36,6 @@ class m220317_194649_exchange_currency_pair_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('exchange_currency_pair');
+        $this->dropTable('exchange_pair');
     }
 }

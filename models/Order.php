@@ -94,7 +94,7 @@ class Order extends BaseModel
     public function allowedExchangeRate()
     {
         $line = TradingLine::findOne(['id' => $this->trading_line_id]);
-        $pair = ExchangeCurrencyPair::findOne([
+        $pair = ExchangePair::findOne([
             'pair_id' => $line->pair_id,
             'exchange_id' => $line->exchange_id,
         ]);
@@ -109,7 +109,7 @@ class Order extends BaseModel
     public function allowedQuantity()
     {
         $line = TradingLine::findOne(['id' => $this->trading_line_id]);
-        $pair = ExchangeCurrencyPair::findOne([
+        $pair = ExchangePair::findOne([
             'pair_id' => $line->pair_id,
             'exchange_id' => $line->exchange_id,
         ]);
@@ -132,7 +132,7 @@ class Order extends BaseModel
 
     public function getPair(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id'])->via('line');
+        return $this->hasOne(Pair::class, ['id' => 'pair_id'])->via('line');
     }
 
     public function getPrevious(): \yii\db\ActiveQuery

@@ -44,7 +44,7 @@ class TradingLine extends ActiveRecord
 
     public function allowedAmount()
     {
-        $pair = CurrencyPair::findOne(['id' => $this->pair_id]);
+        $pair = Pair::findOne(['id' => $this->pair_id]);
 
         if (!($this->amount >= $pair->min_amount
             && $this->amount <= $pair->max_amount)) {
@@ -55,12 +55,12 @@ class TradingLine extends ActiveRecord
 
     public function getPair(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);
+        return $this->hasOne(Pair::class, ['id' => 'pair_id']);
     }
 
     public function getExchangePair(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(ExchangeCurrencyPair::class, [
+        return $this->hasOne(ExchangePair::class, [
             'pair_id' => 'pair_id',
             'exchange_id' => 'exchange_id',
         ]);

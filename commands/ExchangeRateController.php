@@ -3,9 +3,8 @@
 namespace app\commands;
 
 use app\exceptions\ApiException;
-use app\models\CurrencyPair;
 use app\models\Exchange;
-use app\models\ExchangeCurrencyPair;
+use app\models\ExchangePair;
 use app\models\ExchangeRate;
 use app\models\TradingLine;
 use Exception;
@@ -40,7 +39,7 @@ class ExchangeRateController extends \yii\console\Controller
             /**
              * Берем список всех валютных пар биржи, для которых созданы торговые линии
              */
-            $pairs = ExchangeCurrencyPair::find()
+            $pairs = ExchangePair::find()
                 ->where(['exchange_id' => $exchangeModel->id])
                 ->andWhere(['in', 'pair_id', TradingLine::find()->select('pair_id')->column()])
                 ->all();

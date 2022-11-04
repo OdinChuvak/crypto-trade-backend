@@ -5,7 +5,7 @@ namespace app\models;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
-class ExchangeCurrencyPair extends BaseModel
+class ExchangePair extends BaseModel
 {
     public function behaviors(): array
     {
@@ -21,19 +21,12 @@ class ExchangeCurrencyPair extends BaseModel
 
     public static function tableName(): string
     {
-        return 'exchange_currency_pair';
+        return 'exchange_pair';
     }
 
     public function rules(): array
     {
         return [
-            [
-                [
-                    'first_currency',
-                    'second_currency'
-                ],
-                'string'
-            ],
             [
                 [
                     'min_quantity',
@@ -68,6 +61,27 @@ class ExchangeCurrencyPair extends BaseModel
         ];
     }
 
+    public function attributeLabels(): array
+    {
+        return [
+            'id' => 'ID',
+            'exchange_id' => 'ID биржи',
+            'pair_id' => 'ID пары',
+            'min_quantity' => 'Минимальный допустимый объем',
+            'max_quantity' => 'Максимальный допустимый объем',
+            'min_price' => 'Минимальная допустимая цена',
+            'max_price' => 'Максимальная допустимая цена',
+            'min_amount' => 'Минимальная допустимая сумма покупки',
+            'max_amount' => 'Максимальная допустимая сумма покупки',
+            'price_precision' => 'Точность цены',
+            'commission_taker_percent' => 'Комиссия на покупку',
+            'commission_maker_percent' => 'Комиссия на продажу',
+            'is_delisted' => 'Произведен делистинг валютной пары',
+            'updated_at' => 'Временная метка последнего изменения',
+            'created_at' => 'Временная метка создания',
+        ];
+    }
+
     public function extraFields(): array
     {
         return [
@@ -78,7 +92,7 @@ class ExchangeCurrencyPair extends BaseModel
 
     public function getPair(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(CurrencyPair::class, ['id' => 'pair_id']);
+        return $this->hasOne(Pair::class, ['id' => 'pair_id']);
     }
 
     public function getLimits(): \yii\db\ActiveQuery
