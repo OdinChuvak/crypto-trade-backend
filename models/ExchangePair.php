@@ -29,15 +29,7 @@ class ExchangePair extends BaseModel
         return [
             [
                 [
-                    'min_quantity',
-                    'max_quantity',
-                    'min_price',
-                    'max_price',
-                    'min_amount',
-                    'max_amount',
                     'price_precision',
-                    'commission_taker_percent',
-                    'commission_maker_percent',
                 ],
                 'required'
             ],
@@ -47,6 +39,14 @@ class ExchangePair extends BaseModel
                     'exchange_id',
                     'pair_id',
                     'is_delisted',
+                    'min_quantity',
+                    'max_quantity',
+                    'min_price',
+                    'max_price',
+                    'min_amount',
+                    'max_amount',
+                    'commission_taker_percent',
+                    'commission_maker_percent',
                 ],
                 'safe'
             ],
@@ -85,18 +85,12 @@ class ExchangePair extends BaseModel
     public function extraFields(): array
     {
         return [
-            'pair',
-            'limits',
+            'pair'
         ];
     }
 
     public function getPair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(Pair::class, ['id' => 'pair_id']);
-    }
-
-    public function getLimits(): \yii\db\ActiveQuery
-    {
-        return $this->hasOne(ExchangeRateLimits::class, ['first_currency' => 'first_currency', 'second_currency' => 'second_currency']);
     }
 }
