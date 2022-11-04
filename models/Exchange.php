@@ -16,6 +16,7 @@ class Exchange extends BaseModel
         return [
             'id' => 'ID биржи',
             'name' => 'Название биржи',
+            'is_disabled' => 'Метка неактивности криптобиржи',
         ];
     }
 
@@ -35,6 +36,12 @@ class Exchange extends BaseModel
                 ],
                 'required',
                 'message' => 'Название биржи не может быть пустым',
+            ],
+            [
+                [
+                    'is_disabled',
+                ],
+                'boolean'
             ],
         ];
     }

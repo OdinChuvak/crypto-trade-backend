@@ -15,6 +15,7 @@ class m220223_085531_exchange_table extends Migration
         $this->createTable('exchange', [
             'id' => $this->primaryKey(),
             'name' => $this->string(30)->unique()->notNull(),
+            'is_disabled' => $this->boolean()->defaultValue(false),
         ]);
     }
 
