@@ -310,7 +310,7 @@ class OrderController extends \yii\console\Controller
                      * то переходим ко следующему ордеру
                      */
                     if (in_array($order->exchange_order_id, $exchangeOrderIds)) {
-                        continue 1;
+                        continue;
                     }
 
                     /**

@@ -3,11 +3,11 @@
 namespace app\controllers;
 
 use app\actions\IndexAction;
-use app\models\CurrencyPair;
+use app\models\Pair;
 
 class CurrencyPairController extends BaseApiController
 {
-    public $modelClass = CurrencyPair::class;
+    public $modelClass = Pair::class;
 
     public function actions(): array
     {
