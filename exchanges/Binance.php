@@ -43,10 +43,21 @@ class Binance extends BaseExchange implements ExchangeInterface
 
     /**
      * @inheritDoc
+     * @throws Exception
      */
     public static function getTicker(): array
     {
-        // TODO: Implement getTicker() method.
+        $exchangeTicker = self::sendPublicQuery('ticker/price');
+        $ticker = [];
+
+        foreach ($exchangeTicker as $data) {
+            $ticker[] = [
+                'exchange_pair_id' => $data['symbol'],
+                'exchange_rate' => $data['price'],
+            ];
+        }
+
+        return $ticker;
     }
 
     /**
@@ -77,7 +88,7 @@ class Binance extends BaseExchange implements ExchangeInterface
     {
         return $this->sendPrivateQuery('order', [
             'orderId' => $order->exchange_order_id,
-            'symbol' => $order->pair->first_currency . $order->pair->second_currency
+            'symbol' => $order->pair->first_currency . $order->pair->second_currency,
         ], "DELETE");
     }
 
@@ -134,18 +145,47 @@ class Binance extends BaseExchange implements ExchangeInterface
 
     /**
      * @inheritDoc
+     * @throws ApiException
      */
     public function getOpenOrdersList(): array
     {
-        // TODO: Implement getOpenOrdersList() method.
+        $apiResult = $this->sendPrivateQuery('openOrders', null, "GET");
+        $userOpenOrders = [];
+
+        foreach ($apiResult as $order) {
+            $userOpenOrders[] = $order['orderId'];
+        }
+
+        return $userOpenOrders;
     }
 
     /**
      * @inheritDoc
+     * @throws ApiException
      */
-    public function getOrderTrades(int $exchangeOrderId): array
+    public function getOrderTrades(Order $order): array
     {
-        // TODO: Implement getOrderTrades() method.
+        $apiResult = $this->sendPrivateQuery('myTrades', [
+            'orderId' => $order->exchange_order_id,
+            'symbol' => $order->pair->first_currency . $order->pair->second_currency,
+        ], "GET");
+
+        $orderTrades = [];
+
+        foreach ($apiResult as $trade) {
+            $orderTrades[] = [
+                "order_id" => $trade["orderId"],
+                "date" => $trade["time"],
+                "type" => $trade["isBuyer"] ? 'buy' : 'sell',
+                "quantity" => $trade["qty"],
+                "price" => $trade["price"],
+                "amount" => $trade["quoteQty"],
+                "commission_amount" => $trade["commission"],
+                "commission_currency" => $trade["commissionAsset"],
+            ];
+        }
+
+        return $orderTrades;
     }
 
     /**
