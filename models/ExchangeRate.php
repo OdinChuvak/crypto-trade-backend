@@ -2,8 +2,23 @@
 
 namespace app\models;
 
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
+
 class ExchangeRate extends BaseModel
 {
+    public function behaviors(): array
+    {
+        return [
+            [
+                'class' => TimestampBehavior::class,
+                'createdAtAttribute' => false,
+                'updatedAtAttribute' => 'updated_at',
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
+
     public static function tableName(): string
     {
         return 'exchange_rate';
