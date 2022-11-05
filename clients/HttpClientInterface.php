@@ -5,5 +5,11 @@ namespace app\clients;
 interface HttpClientInterface
 {
     /** Пошлет http-запрос */
-    public static function sendQuery(string $path, array $payload = [], array $headers = [], array $params = []);
+    public static function sendQuery(
+        string $url,
+        string $method,
+        array $payload,
+        array $headers,
+        array $params
+    );
 }

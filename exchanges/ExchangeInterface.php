@@ -40,5 +40,5 @@ interface ExchangeInterface
     public function sendPrivateQuery(string $apiName, array $payload, string $method, string $apiKey);
 
     /** Отправит публичный запрос на биржу, получит ответ и обработает его */
-    public static function sendPublicQuery(string $apiName, array $payload);
+    public static function sendPublicQuery(string $apiName, array $payload, array $headers, array $params, string $method, string $apiKey);
 }

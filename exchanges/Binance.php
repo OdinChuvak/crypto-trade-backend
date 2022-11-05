@@ -13,9 +13,9 @@ class Binance extends BaseExchange implements ExchangeInterface
     /**
      * @inheritDoc
      */
-    public static function getApiUrl(string $apiKey = 'rest'): string
+    public static function getApiUrl(string $apiKey = "REST"): string
     {
-        if ($apiKey === 'sapi') {
+        if ($apiKey === 'SAPI') {
             return 'https://api.binance.com/sapi/v1/';
         }
 
@@ -82,7 +82,7 @@ class Binance extends BaseExchange implements ExchangeInterface
      */
     public static function getCurrencyPairsList(): array
     {
-        $exchangeInfo = self::sendPublicQuery('exchangeInfo', []);
+        $exchangeInfo = self::sendPublicQuery('exchangeInfo');
         $exchangeCurrencyPairsList = $exchangeInfo['symbols'];
         $currencyPairsList = [];
 
@@ -127,11 +127,6 @@ class Binance extends BaseExchange implements ExchangeInterface
         return $currencyPairsList;
     }
 
-    public function getCommission($pair)
-    {
-        $exchangeInfo = $this->sendPrivateQuery('exchangeInfo', []);
-    }
-
     /**
      * @inheritDoc
      */
@@ -153,7 +148,7 @@ class Binance extends BaseExchange implements ExchangeInterface
      * @throws ApiException
      * @throws Exception
      */
-    public function sendPrivateQuery(string $apiName, array $payload, string $method = 'POST', string $apiKey = 'rest')
+    public function sendPrivateQuery(string $apiName, array $payload = null, string $method = "POST", string $apiKey = "REST")
     {
         $timestamp = time() * 1000;
         $payload['timestamp'] = $timestamp;
@@ -169,7 +164,7 @@ class Binance extends BaseExchange implements ExchangeInterface
 
         $params = $method != 'POST' ? ['CURLOPT_POST' => false] : [];
 
-        $res = CurlClient::sendQuery(self::getApiUrl() . $apiName, $payload, $headers, $params);
+        $res = CurlClient::sendQuery(self::getApiUrl($apiKey) . $apiName, $method, $payload, $headers, $params);
         $dec = json_decode($res, true);
 
         if ($dec === null) {
@@ -183,10 +178,9 @@ class Binance extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function sendPublicQuery(string $apiName, array $payload)
+    public static function sendPublicQuery(string $apiName, array $payload = null, array $headers = null, array $params = null, string $method = "GET", string $apiKey = "REST")
     {
-        $curlOptions = ['CURLOPT_POST' => false];
-        $apiData = CurlClient::sendQuery(self::getApiUrl() . $apiName, $payload, [], $curlOptions);
+        $apiData = CurlClient::sendQuery(self::getApiUrl($apiKey) . $apiName, $method, $payload, $headers, $params);
         $apiData = json_decode($apiData, true);
 
         return self::getResponse($apiData);

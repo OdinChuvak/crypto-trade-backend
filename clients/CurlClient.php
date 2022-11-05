@@ -14,7 +14,6 @@ class CurlClient implements HttpClientInterface
     private static function getDefaultCurlOptions(): array
     {
         return [
-            'CURLOPT_RETURNTRANSFER' => true,
             'CURLOPT_USERAGENT' => 'Mozilla/4.0 (compatible; PHP client; ' . php_uname('s') . '; PHP/' . phpversion() . ')',
             'CURLOPT_POST' => true,
             'CURLOPT_SSL_VERIFYPEER' => false,
@@ -25,38 +24,52 @@ class CurlClient implements HttpClientInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function sendQuery(string $url, array $payload = [], array $headers = [], array $params = []): bool|string
+    public static function sendQuery(string $url, string $method = "GET", array $payload = null, array $headers = null, array $params = null): bool|string
     {
-        static $curl = null;
+        // Дефолтные параметры CURL
         $defaultOptions = self::getDefaultCurlOptions();
-        $isPostQuery = $params['CURLOPT_POST'] ?? $defaultOptions['CURLOPT_POST'];
 
-        if ($curl === null) {
-            $curl = curl_init();
+        // Инициализируем CURL
+        $curl = curl_init();
 
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER,
-                $params['CURLOPT_RETURNTRANSFER'] ?? $defaultOptions['CURLOPT_RETURNTRANSFER']);
+        // Устанавливаем метод запроса
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
 
-            curl_setopt($curl, CURLOPT_USERAGENT,
-                $params['CURLOPT_USERAGENT'] ?? $defaultOptions['CURLOPT_USERAGENT']);
+        // Отдавать результат curl_exec в виде строки, а не выводить сразу
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+
+        // Установим агент запроса
+        curl_setopt($curl, CURLOPT_USERAGENT,
+            $params['CURLOPT_USERAGENT'] ?? $defaultOptions['CURLOPT_USERAGENT']);
+
+        // Установим заголовки запроса
+        if ($headers)
+            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+        // Отключим проверку SSL сертификатов адресата
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+        // Формируем строку параметров
+        $queryParams = $payload ? http_build_query($payload, '', '&') : null;
+
+        // Обработка метода GET
+        if ($method === "GET") {
+            $url .= $queryParams ? '?' . $queryParams : '';
         }
 
-        $query_params = http_build_query($payload, '', '&');
+        // Обработка метода POST
+        if ($method === "POST") {
 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+            if ($queryParams)
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $queryParams);
 
-        if ($isPostQuery) {
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $query_params);
-        } else {
-            $url .= '?' . $query_params;
+            curl_setopt($curl, CURLOPT_POST, true);
         }
 
+        // Установим URL запроса
         curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_POST, $isPostQuery);
 
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER,
-            $params['CURLOPT_SSL_VERIFYPEER'] ?? $defaultOptions['CURLOPT_SSL_VERIFYPEER']);
-
+        // Шлем запрос
         $result = curl_exec($curl);
 
         if ($result === false) {
