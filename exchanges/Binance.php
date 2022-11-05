@@ -49,12 +49,27 @@ class Binance extends BaseExchange implements ExchangeInterface
     {
         $exchangeTicker = self::sendPublicQuery('ticker/price');
         $ticker = [];
+        $pair = null;
 
         foreach ($exchangeTicker as $data) {
-            $ticker[] = [
-                'exchange_pair_id' => $data['symbol'],
-                'exchange_rate' => $data['price'],
-            ];
+
+            for ($i = 1; $i < strlen($data['symbol']); $i++) {
+                $pair = Pair::findOne([
+                    'first_currency' => substr($data['symbol'], 0, $i),
+                    'second_currency' => substr($data['symbol'], $i),
+                ]);
+
+                if ($pair) break;
+            }
+
+            if ($pair) {
+                $ticker[] = [
+                    'first_currency' => $pair->first_currency,
+                    'second_currency' => $pair->second_currency,
+                    'exchange_rate' => $data['price'],
+                ];
+            }
+
         }
 
         return $ticker;
