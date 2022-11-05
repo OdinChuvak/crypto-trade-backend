@@ -5,6 +5,7 @@ namespace app\exchanges;
 use app\clients\CurlClient;
 use app\exceptions\ApiException;
 use app\helpers\AppError;
+use app\models\Order;
 use app\models\Pair;
 use Exception;
 
@@ -70,10 +71,14 @@ class Binance extends BaseExchange implements ExchangeInterface
 
     /**
      * @inheritDoc
+     * @throws ApiException
      */
-    public function cancelOrder(int $exchangeOrderId)
+    public function cancelOrder(Order $order)
     {
-        // TODO: Implement cancelOrder() method.
+        return $this->sendPrivateQuery('order', [
+            'orderId' => $order->exchange_order_id,
+            'symbol' => $order->pair->first_currency . $order->pair->second_currency
+        ], "DELETE");
     }
 
     /**

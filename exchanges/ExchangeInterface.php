@@ -2,6 +2,7 @@
 
 namespace app\exchanges;
 
+use app\models\Order;
 use app\models\Pair;
 
 interface ExchangeInterface
@@ -25,7 +26,7 @@ interface ExchangeInterface
     public function createOrder(Pair $pair, float $quantity, float $price, string $operation): array;
 
     /** Отменит ордер на бирже */
-    public function cancelOrder(int $exchangeOrderId);
+    public function cancelOrder(Order $order);
 
     /** Вернет список всех торговых валютных пар биржи */
     public static function getCurrencyPairsList(): array;

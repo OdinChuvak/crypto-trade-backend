@@ -53,7 +53,7 @@ class CurlClient implements HttpClientInterface
         $queryParams = $payload ? http_build_query($payload, '', '&') : null;
 
         // Обработка метода GET
-        if ($method === "GET") {
+        if ($method === "GET" || $method === "DELETE") {
             $url .= $queryParams ? '?' . $queryParams : '';
         }
 
