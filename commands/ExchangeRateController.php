@@ -6,6 +6,7 @@ use app\exceptions\ApiException;
 use app\models\Exchange;
 use app\models\ExchangePair;
 use app\models\ExchangeRate;
+use app\models\Pair;
 use app\models\TradingLine;
 use Exception;
 
@@ -17,31 +18,37 @@ use Exception;
  */
 class ExchangeRateController extends \yii\console\Controller
 {
+    // Курс падает
+    const RATE_DYNAMIC_DOWN = -1;
+
+    // Курс растет
+    const RATE_DYNAMIC_UP = 1;
+
+    // Курс не меняется
+    const RATE_DYNAMIC_NOT = 0;
+
     /**
-     * TODO: Временная фича
-     *
-     * На этапе разработки приложения, пока я не могу позволить себе серьезные мощности,
-     * статистика курсов валют будет собираться только для пар, для которых есть созданная
-     * торговая линия, с шагом в 10 минут. В последующем нужно переписать эту команду,
-     * для сбора статистики курсов для всех валют каждой биржи с частотой 1 раз в минуту.
-     *
      * @throws Exception
      */
-    public function actionIndex()
+    public function actionIndex(): bool
     {
         /**
          * Берем список всех криптовалютных бирж
          */
-        $exchangeModels = Exchange::find()->all();
+        $exchangeModels = Exchange::findAll(['is_disabled' => false]);
 
         foreach ($exchangeModels as $exchangeModel) {
 
             /**
              * Берем список всех валютных пар биржи, для которых созданы торговые линии
              */
-            $pairs = ExchangePair::find()
+            $activePairs = TradingLine::find()
+                ->select('pair_id')
                 ->where(['exchange_id' => $exchangeModel->id])
-                ->andWhere(['in', 'pair_id', TradingLine::find()->select('pair_id')->column()])
+                ->column();
+
+            $pairs = Pair::find()
+                ->where(['in', 'id', $activePairs])
                 ->all();
 
             /**
@@ -62,19 +69,29 @@ class ExchangeRateController extends \yii\console\Controller
              * Запишем данные по курсам в БД
              */
             foreach ($exchangeTicker as $tickerItem) {
-
                 foreach ($pairs as $pair) {
                     if ($tickerItem['first_currency'] === $pair->first_currency
                         && $tickerItem['second_currency'] === $pair->second_currency)
                     {
-                        $exchangeRate = new ExchangeRate();
+                        $exchangeRate = ExchangeRate::findOne([
+                            'exchange_id' => $exchangeModel->id,
+                            'pair_id' => $pair->id,
+                        ]);
+
+                        if (!$exchangeRate) {
+                            $exchangeRate = new ExchangeRate();
+                        }
+
+                        $rateDynamic = $exchangeRate->value > $tickerItem['exchange_rate']
+                            ? self::RATE_DYNAMIC_DOWN
+                            : ($exchangeRate->value < $tickerItem['exchange_rate']
+                            ? self::RATE_DYNAMIC_UP : self::RATE_DYNAMIC_NOT);
 
                         $exchangeRate->load([
                             'exchange_id' => $exchangeModel->id,
-                            'pair_id' => $pair->pair_id,
-                            'first_currency' => $tickerItem['first_currency'],
-                            'second_currency' => $tickerItem['second_currency'],
+                            'pair_id' => $pair->id,
                             'value' => $tickerItem['exchange_rate'],
+                            'rate_dynamic' => $rateDynamic,
                         ], '');
 
                         $exchangeRate->save();
