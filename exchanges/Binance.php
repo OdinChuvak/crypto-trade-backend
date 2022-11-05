@@ -5,7 +5,7 @@ namespace app\exchanges;
 use app\clients\CurlClient;
 use app\exceptions\ApiException;
 use app\helpers\AppError;
-use app\models\ExchangePair;
+use app\models\Pair;
 use Exception;
 
 class Binance extends BaseExchange implements ExchangeInterface
@@ -13,17 +13,13 @@ class Binance extends BaseExchange implements ExchangeInterface
     /**
      * @inheritDoc
      */
-    public static function getPublicApiUrl(): string
+    public static function getApiUrl(string $apiKey = 'rest'): string
     {
-        return 'https://api.binance.com/api/v3/';
-    }
+        if ($apiKey === 'sapi') {
+            return 'https://api.binance.com/sapi/v1/';
+        }
 
-    /**
-     * @inheritDoc
-     */
-    public static function getPrivateApiUrl(): string
-    {
-        return 'https://api.binance.com/sapi/v1/';
+        return 'https://api.binance.com/api/v3/';
     }
 
     /**
@@ -39,9 +35,9 @@ class Binance extends BaseExchange implements ExchangeInterface
     /**
      * @inheritDoc
      */
-    public static function getExchangeErrorCode(array $error_data): int
+    public static function getExchangeErrorCode(array $errorData): int
     {
-        return $error_data['code'];
+        return $errorData['code'];
     }
 
     /**
@@ -54,16 +50,28 @@ class Binance extends BaseExchange implements ExchangeInterface
 
     /**
      * @inheritDoc
+     * @throws ApiException
      */
-    public function createOrder(ExchangePair $pair, float $quantity, float $price, string $operation): array
+    public function createOrder(Pair $pair, float $quantity, float $price, string $operation): array
     {
-        // TODO: Implement createOrder() method.
+        $apiResult = $this->sendPrivateQuery('order', [
+            'symbol' => $pair->first_currency . $pair->second_currency,
+            'quantity' => $quantity,
+            'price' => $price,
+            'type' => 'LIMIT',
+            'side' => $operation,
+            'timeInForce' => 'GTC',
+        ]);
+
+        return [
+            'exchange_order_id' => $apiResult['orderId']
+        ];
     }
 
     /**
      * @inheritDoc
      */
-    public function cancelOrder(int $exchange_order_id)
+    public function cancelOrder(int $exchangeOrderId)
     {
         // TODO: Implement cancelOrder() method.
     }
@@ -135,7 +143,7 @@ class Binance extends BaseExchange implements ExchangeInterface
     /**
      * @inheritDoc
      */
-    public function getOrderTrades(int $exchange_order_id): array
+    public function getOrderTrades(int $exchangeOrderId): array
     {
         // TODO: Implement getOrderTrades() method.
     }
@@ -145,7 +153,7 @@ class Binance extends BaseExchange implements ExchangeInterface
      * @throws ApiException
      * @throws Exception
      */
-    public function sendPrivateQuery(string $api_name, array $payload, string $method = 'POST')
+    public function sendPrivateQuery(string $apiName, array $payload, string $method = 'POST', string $apiKey = 'rest')
     {
         $timestamp = time() * 1000;
         $payload['timestamp'] = $timestamp;
@@ -161,7 +169,7 @@ class Binance extends BaseExchange implements ExchangeInterface
 
         $params = $method != 'POST' ? ['CURLOPT_POST' => false] : [];
 
-        $res = CurlClient::sendQuery(self::getPrivateApiUrl() . $api_name, $payload, $headers, $params);
+        $res = CurlClient::sendQuery(self::getApiUrl() . $apiName, $payload, $headers, $params);
         $dec = json_decode($res, true);
 
         if ($dec === null) {
@@ -175,10 +183,10 @@ class Binance extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function sendPublicQuery(string $api_name, array $payload)
+    public static function sendPublicQuery(string $apiName, array $payload)
     {
         $curlOptions = ['CURLOPT_POST' => false];
-        $apiData = CurlClient::sendQuery(self::getPublicApiUrl() . $api_name, $payload, [], $curlOptions);
+        $apiData = CurlClient::sendQuery(self::getApiUrl() . $apiName, $payload, [], $curlOptions);
         $apiData = json_decode($apiData, true);
 
         return self::getResponse($apiData);

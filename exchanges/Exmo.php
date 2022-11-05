@@ -5,7 +5,7 @@ namespace app\exchanges;
 use app\clients\CurlClient;
 use app\helpers\AppError;
 use app\exceptions\ApiException;
-use app\models\ExchangePair;
+use app\models\Pair;
 use Exception;
 
 class Exmo extends BaseExchange implements ExchangeInterface
@@ -13,15 +13,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
     /**
      * @inheritDoc
      */
-    public static function getPublicApiUrl(): string
-    {
-        return 'https://api.exmo.com/v1.1/';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function getPrivateApiUrl(): string
+    public static function getApiUrl(string $apiKey = 'rest'): string
     {
         return 'https://api.exmo.com/v1.1/';
     }
@@ -49,9 +41,9 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @param string $error_message
      * @return int
      */
-    public static function getExchangeErrorCode(array $error_data): int
+    public static function getExchangeErrorCode(array $errorData): int
     {
-        preg_match('/\d{5}/', $error_data['error'], $exchange_error_code);
+        preg_match('/\d{5}/', $errorData['error'], $exchange_error_code);
 
         return $exchange_error_code[0];
     }
@@ -81,7 +73,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public function createOrder(ExchangePair $pair, float $quantity, float $price, string $operation): array
+    public function createOrder(Pair $pair, float $quantity, float $price, string $operation): array
     {
         $apiResult = $this->sendPrivateQuery('order_create', [
             'pair' => $pair->first_currency . '_' . $pair->second_currency,
@@ -142,10 +134,10 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @return array
      * @throws Exception
      */
-    public function getOrderTrades($exchange_order_id): array
+    public function getOrderTrades($exchangeOrderId): array
     {
         $apiResult = $this->sendPrivateQuery('order_trades', [
-            'order_id' => $exchange_order_id
+            'order_id' => $exchangeOrderId
         ]);
         $orderTrades = [];
 
@@ -200,7 +192,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public function sendPrivateQuery(string $api_name, array $payload = [], string $method = 'POST')
+    public function sendPrivateQuery(string $apiName, array $payload = [], string $method = 'POST', string $apiKey = 'rest')
     {
         $mt = explode(' ', microtime());
         $nonce = $mt[1] . substr($mt[0], 2, 6);
@@ -218,7 +210,7 @@ class Exmo extends BaseExchange implements ExchangeInterface
         ];
 
         // шлем запрос
-        $res = CurlClient::sendQuery(self::getPrivateApiUrl() . $api_name, $payload, $headers);
+        $res = CurlClient::sendQuery(self::getApiUrl() . $apiName, $payload, $headers);
         $dec = json_decode($res, true);
 
         if ($dec === null) {
@@ -232,10 +224,10 @@ class Exmo extends BaseExchange implements ExchangeInterface
      * @inheritDoc
      * @throws Exception
      */
-    public static function sendPublicQuery(string $api_name, array $payload)
+    public static function sendPublicQuery(string $apiName, array $payload)
     {
         $curlOptions = ['CURLOPT_POST' => false];
-        $apiData = CurlClient::sendQuery(self::getPublicApiUrl() . $api_name, $payload, [], $curlOptions);
+        $apiData = CurlClient::sendQuery(self::getApiUrl() . $apiName, $payload, [], $curlOptions);
         $apiData = json_decode($apiData, true);
 
         return self::getResponse($apiData);
