@@ -18,15 +18,6 @@ use Exception;
  */
 class ExchangeRateController extends \yii\console\Controller
 {
-    // Курс падает
-    const RATE_DYNAMIC_DOWN = -1;
-
-    // Курс растет
-    const RATE_DYNAMIC_UP = 1;
-
-    // Курс не меняется
-    const RATE_DYNAMIC_NOT = 0;
-
     /**
      * @throws Exception
      */
@@ -83,9 +74,9 @@ class ExchangeRateController extends \yii\console\Controller
                         }
 
                         $rateDynamic = $exchangeRate->value > $tickerItem['exchange_rate']
-                            ? self::RATE_DYNAMIC_DOWN
+                            ? ExchangeRate::RATE_DYNAMIC_DOWN
                             : ($exchangeRate->value < $tickerItem['exchange_rate']
-                            ? self::RATE_DYNAMIC_UP : self::RATE_DYNAMIC_NOT);
+                            ? ExchangeRate::RATE_DYNAMIC_UP : ExchangeRate::RATE_DYNAMIC_NOT);
 
                         $exchangeRate->load([
                             'exchange_id' => $exchangeModel->id,
