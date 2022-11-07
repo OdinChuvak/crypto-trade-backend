@@ -17,7 +17,7 @@ class m220508_130451_exchange_rate_table extends Migration
             'exchange_id' => $this->integer()->notNull(),
             'pair_id' => $this->integer()->notNull(),
             'value' => $this->double()->notNull(),
-            'rate_dynamic' => $this->tinyInteger()->defaultValue(0),
+            'dynamic' => $this->tinyInteger()->defaultValue(0),
             'updated_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);
     }
