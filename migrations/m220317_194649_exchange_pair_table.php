@@ -23,6 +23,7 @@ class m220317_194649_exchange_pair_table extends Migration
             'min_amount' => $this->double()->null(),
             'max_amount' => $this->double()->null(),
             'price_precision' => $this->tinyInteger()->notNull(),
+            'quantity_precision' => $this->tinyInteger()->notNull(),
             'commission_taker_percent' => $this->double()->null(),
             'commission_maker_percent' => $this->double()->null(),
             'is_delisted' => $this->boolean()->defaultValue(false),

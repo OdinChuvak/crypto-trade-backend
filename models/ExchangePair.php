@@ -30,6 +30,7 @@ class ExchangePair extends BaseModel
             [
                 [
                     'price_precision',
+                    'quantity_precision',
                 ],
                 'required'
             ],
@@ -74,6 +75,7 @@ class ExchangePair extends BaseModel
             'min_amount' => 'Минимальная допустимая сумма покупки',
             'max_amount' => 'Максимальная допустимая сумма покупки',
             'price_precision' => 'Точность цены',
+            'quantity_precision' => 'Точность закупаемого количества',
             'commission_taker_percent' => 'Комиссия на покупку',
             'commission_maker_percent' => 'Комиссия на продажу',
             'is_delisted' => 'Произведен делистинг валютной пары',
