@@ -22,7 +22,7 @@ class TradingLine extends ActiveRecord
                     'pair_id',
                     'exchange_id',
                     'sell_rate_step',
-                    'buy_rate_step',
+                    'rate_step',
                     'first_order_amount'
                 ],
                 'required',
