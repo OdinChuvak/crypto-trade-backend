@@ -211,7 +211,17 @@ class Binance extends BaseExchange implements ExchangeInterface
             "symbol" => $pair->first_currency . $pair->second_currency,
         ] : null;
 
-        return $this->sendPrivateQuery('asset/tradeFee', $params, "GET", "SAPI");
+        $apiResult = $this->sendPrivateQuery('asset/tradeFee', $params, "GET", "SAPI");
+        $commissions = [];
+
+        foreach($apiResult as $commission) {
+            $commissions[] = [
+                'commission_taker_percent' => $commission['takerCommission'] * 100,
+                'commission_maker_percent' => $commission['makerCommission'] * 100,
+            ];
+        }
+
+        return $commissions;
     }
 
     /**
