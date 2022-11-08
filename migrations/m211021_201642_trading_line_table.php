@@ -18,7 +18,7 @@ class m211021_201642_trading_line_table extends Migration
             'user_id' => $this->integer()->notNull(),
             'pair_id' => $this->integer()->notNull(),
             'sell_rate_step' => $this->integer()->notNull(),
-            'rate_step' => $this->integer()->notNull(),
+            'buy_rate_step' => $this->integer()->notNull(),
             'first_order_amount' => $this->float()->notNull(),
             'is_stopped' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
