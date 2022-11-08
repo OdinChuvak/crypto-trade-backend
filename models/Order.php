@@ -109,7 +109,7 @@ class Order extends BaseModel
             'pair_id' => $line->pair_id,
             'exchange_id' => $line->exchange_id,
         ]);
-        $actualQuantity = round($line->amount / $this->required_rate, 6);
+        $actualQuantity = round($line->first_order_amount / $this->required_rate, 6);
 
         if ($actualQuantity < $pair->min_quantity || $actualQuantity > $pair->max_quantity) {
 
