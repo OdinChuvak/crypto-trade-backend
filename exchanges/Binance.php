@@ -29,6 +29,7 @@ class Binance extends BaseExchange implements ExchangeInterface
     public static function getExchangeErrorMap(): array
     {
         return [
+            '-1013' => AppError::AMOUNT_LESS,
             '-1022' => AppError::INCORRECT_SIGNATURE,
         ];
     }
@@ -119,36 +120,38 @@ class Binance extends BaseExchange implements ExchangeInterface
 
         foreach ($exchangeCurrencyPairsList as $exchangeCurrencyPair) {
 
+            $pairSets = [];
+
             foreach ($exchangeCurrencyPair['filters'] as $filter) {
 
                 if ($filter['filterType'] === 'LOT_SIZE') {
-                    $exchangeCurrencyPair['filterData']['minQty'] = $filter['minQty'];
-                    $exchangeCurrencyPair['filterData']['maxQty'] = $filter['maxQty'];
+                    $pairSets['minQty'] = $filter['minQty'];
+                    $pairSets['maxQty'] = $filter['maxQty'];
+                    $pairSets['stepSize'] = $filter['stepSize'];
                 }
 
                 if ($filter['filterType'] === 'PRICE_FILTER') {
-                    $exchangeCurrencyPair['filterData']['minPrice'] = $filter['minPrice'];
-                    $exchangeCurrencyPair['filterData']['maxPrice'] = $filter['maxPrice'];
+                    $pairSets['minPrice'] = $filter['minPrice'];
+                    $pairSets['maxPrice'] = $filter['maxPrice'];
+                    $pairSets['tickSize'] = $filter['tickSize'];
                 }
 
                 if ($filter['filterType'] === 'MIN_NOTIONAL') {
-                    $exchangeCurrencyPair['filterData']['minNotional'] = $filter['minNotional'];
-                }
-
-                if ($filter['filterType'] === 'MAX_NOTIONAL') {
-                    $exchangeCurrencyPair['filterData']['maxNotional'] = $filter['maxNotional'];
+                    $pairSets['minNotional'] = $filter['minNotional'];
                 }
             }
 
             $currencyPairsList[] = [
                 'first_currency' => $exchangeCurrencyPair['baseAsset'],
                 'second_currency' => $exchangeCurrencyPair['quoteAsset'],
-                'min_quantity' => $exchangeCurrencyPair['filterData']['minQty'],
-                'max_quantity' => $exchangeCurrencyPair['filterData']['maxQty'],
-                'min_price' => $exchangeCurrencyPair['filterData']['minPrice'],
-                'max_price' => $exchangeCurrencyPair['filterData']['maxPrice'],
-                'min_amount' => $exchangeCurrencyPair['filterData']['minNotional'] ?? null,
-                'max_amount' => $exchangeCurrencyPair['filterData']['maxNotional'] ?? null,
+                'min_quantity' => $pairSets['minQty'],
+                'max_quantity' => $pairSets['maxQty'],
+                'quantity_step' => $pairSets['stepSize'],
+                'min_price' => $pairSets['minPrice'],
+                'max_price' => $pairSets['maxPrice'],
+                'price_step' => $pairSets['tickSize'],
+                'min_amount' => $pairSets['minNotional'] ?? null,
+                'max_amount' => $pairSets['maxNotional'] ?? null,
                 'price_precision' => $exchangeCurrencyPair['quoteAssetPrecision'],
                 'quantity_precision' => $exchangeCurrencyPair['baseAssetPrecision'],
             ];
