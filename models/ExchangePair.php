@@ -46,8 +46,6 @@ class ExchangePair extends BaseModel
                     'max_price',
                     'min_amount',
                     'max_amount',
-                    'commission_taker_percent',
-                    'commission_maker_percent',
                 ],
                 'safe'
             ],
@@ -76,8 +74,6 @@ class ExchangePair extends BaseModel
             'max_amount' => 'Максимальная допустимая сумма покупки',
             'price_precision' => 'Точность цены',
             'quantity_precision' => 'Точность закупаемого количества',
-            'commission_taker_percent' => 'Комиссия на покупку',
-            'commission_maker_percent' => 'Комиссия на продажу',
             'is_delisted' => 'Произведен делистинг валютной пары',
             'updated_at' => 'Временная метка последнего изменения',
             'created_at' => 'Временная метка создания',

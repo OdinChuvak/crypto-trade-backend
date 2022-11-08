@@ -28,6 +28,13 @@ class TradingLine extends ActiveRecord
                 'required',
                 'message' => 'The value cannot be empty.'
             ],
+            [
+                [
+                    'commission_taker_percent',
+                    'commission_maker_percent',
+                ],
+                'safe'
+            ],
             ['first_order_amount', 'allowedAmount'],
             ['is_stopped', 'boolean', 'message' => 'This boolean value.']
         ];

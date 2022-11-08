@@ -151,8 +151,6 @@ class Binance extends BaseExchange implements ExchangeInterface
                 'max_amount' => $exchangeCurrencyPair['filterData']['maxNotional'] ?? null,
                 'price_precision' => $exchangeCurrencyPair['quoteAssetPrecision'],
                 'quantity_precision' => $exchangeCurrencyPair['baseAssetPrecision'],
-                'commission_taker_percent' => null,
-                'commission_maker_percent' => null,
             ];
         }
 

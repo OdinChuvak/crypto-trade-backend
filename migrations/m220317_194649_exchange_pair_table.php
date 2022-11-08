@@ -24,8 +24,6 @@ class m220317_194649_exchange_pair_table extends Migration
             'max_amount' => $this->double()->null(),
             'price_precision' => $this->tinyInteger()->notNull(),
             'quantity_precision' => $this->tinyInteger()->notNull(),
-            'commission_taker_percent' => $this->double()->null(),
-            'commission_maker_percent' => $this->double()->null(),
             'is_delisted' => $this->boolean()->defaultValue(false),
             'updated_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
