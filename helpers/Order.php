@@ -81,7 +81,7 @@ class Order
          */
         $rateForSellFirstBuyOrder = $firstBuyOrder->required_rate + Math::getPercent($firstBuyOrder->required_rate, $order->line->sell_rate_step);
         $amountForSellFirstBuyOrder = $rateForSellFirstBuyOrder * $firstBuyOrder->received;
-        $income = $amountForSellFirstBuyOrder - $firstBuyOrder->invested - $order->exchangePair->commission_maker_percent;
+        $income = $amountForSellFirstBuyOrder - $firstBuyOrder->invested - $order->line->commission_maker_percent;
 
         /**
          * Рассчитываем остальные параметры формулы

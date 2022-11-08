@@ -205,9 +205,13 @@ class Binance extends BaseExchange implements ExchangeInterface
     /**
      * @throws ApiException
      */
-    public function getCommissions(): array
+    public function getCommissions(Pair $pair = null): array
     {
-        return $this->sendPrivateQuery('asset/tradeFee', null, "GET", "SAPI");
+        $params = $pair ? [
+            "symbol" => $pair->first_currency . $pair->second_currency,
+        ] : null;
+
+        return $this->sendPrivateQuery('asset/tradeFee', $params, "GET", "SAPI");
     }
 
     /**
