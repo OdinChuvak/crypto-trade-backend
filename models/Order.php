@@ -128,6 +128,16 @@ class Order extends BaseModel
 
     public function getPair(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(Pair::class, ['id' => 'pair_id'])->via('line');
+        return $this->hasOne(Pair::class, [
+            'id' => 'pair_id'
+        ])->via('line');
+    }
+
+    public function getExchangePair(): \yii\db\ActiveQuery
+    {
+        return $this->hasOne(ExchangePair::class, [
+            'id' => 'pair_id',
+            'exchange_id' => 'exchange_id'
+        ])->via('line');
     }
 }

@@ -4,68 +4,99 @@ namespace app\helpers;
 
 use app\models\ExchangePair;
 use app\models\TradingLineLog;
+use app\utils\Math;
 
 class Order
 {
-    public static function getQuantity($order_id): ?float
+    public static function getQuantity(?\app\models\Order $order): ?float
     {
-        $order = \app\models\Order::find()
-            ->with(['line', 'continued'])
-            ->where(['id' => $order_id])
-            ->one();
-
-        $line = $order->line;
-        $continuedOrder = $order->continued;
+        /**
+         * Берем ID предыдущего ордера на продажу
+         */
+        $lastSellOrderId = \app\models\Order::find()
+            ->select('id')
+            ->where([
+                'trading_line_id' => $order->trading_line_id,
+                'operation' => 'sell',
+                'is_executed' => 1,
+            ])
+            ->orderBy(['id' => SORT_DESC])
+            ->limit(1)
+            ->scalar();
 
         /**
-         * Если предыдущий ордер не задан, или курс предыдущего ордера не корректен
-         * (если предыдущий ордер на покупку, а текущий на продажу, но курс текущего меньше предыдущего, и наоборот),
-         * вернем стандартное количество для линии
+         * Получаем все исполненные ордера на покупоку до последней продажи
          */
-        if (!$continuedOrder
-            || ($continuedOrder->operation === 'buy' && $continuedOrder->actual_trading_rate >= $order->required_trading_rate)
-            || ($continuedOrder->operation === 'sell' && $continuedOrder->actual_trading_rate <= $order->required_trading_rate))
-            return $line->amount / $order->required_trading_rate;
+        $lastBuyOrders = \app\models\Order::find()
+            ->where([
+                'trading_line_id' => $order->trading_line_id,
+                'operation' => 'buy',
+                'is_executed' => 1,
+            ])
+            ->andWhere(['>', 'id', $lastSellOrderId])
+            ->all();
 
         /**
-         * Если предыдущий ордер есть, при этом операции у них равны,
-         * значит, что-то пошло не так. Вернем null,
-         * чтобы вызвать ошибку запроса
+         * Если еще ничего не было куплено после последней продажи, вернем количество,
+         * рассчитанное на начальных данных
          */
-        if ($order->operation === $continuedOrder->operation) {
-            return null;
+        if (!$lastBuyOrders) {
+            return round($order->line->first_order_amount / $order->required_rate, $order->exchangePair->quantity_precision);
         }
 
         /**
-         * Если задан первый тип торговли - торговать на все
+         * Если исходный ордер является ордером на продажу, то вернем объем покупки
          */
-        if ($line->trading_method === 1) {
-            return $order->operation === 'buy'
-                ? $continuedOrder->received / $order->required_trading_rate
-                : $continuedOrder->received;
+        if ($order->operation === 'sell') {
+            return round(array_sum(array_column($lastBuyOrders, 'received')), $order->exchangePair->quantity_precision);
         }
 
         /**
-         * Если задан второй тип торговли - копить первую валюту
+         * Если исходный ордер является ордером на покупку, то тут песня
+         *
+         * Формула для рассчета количества в этом случае:
+         *
+         * $x = ($income + ∑$amount + ∑($quantity * $sell_rate)) / ($sell_rate - $rate);
+         * 
+         *      $income - эталонная прибыль. Рассчитывается на основании первой операции купли/продажи.
+         *                  Иными словами - сколько прибыли вышло бы, если бы был исполнен первый ордер на
+         *                  покупку и за ним последовал ордер на продажу того, что куплено.
+         *
+         *      $amount - инвестированные средства в ордер на покупку
+         * 
+         *      $quantity - полученное количество в результате исполнения ордера на покупку
+         * 
+         *      $rate - курс текущего ордера на покупку
+         * 
+         *      $sell_rate - курс для продажи ордера
          */
-        elseif ($line->trading_method === 2) {
-            return $order->operation === 'buy'
-                ? $continuedOrder->received / $order->required_trading_rate
-                : $line->amount / $order->required_trading_rate;
-        }
 
         /**
-         * Если задан второй тип торговли - копить вторую валюту
+         * Вычисляем $income
          */
-        elseif ($line->trading_method === 3) {
-            return $order->operation === 'buy'
-                ? $line->amount / $order->required_trading_rate
-                : $continuedOrder->received;
-        }
+        $firstBuyOrder = $lastBuyOrders[0];
 
-        else {
-            return null;
+        /**
+         * Тут рассчитываем эталонную величину прибыли
+         */
+        $rateForSellFirstBuyOrder = $firstBuyOrder->required_rate + Math::getPercent($firstBuyOrder->required_rate, $order->line->sell_rate_step);
+        $amountForSellFirstBuyOrder = $rateForSellFirstBuyOrder * $firstBuyOrder->received;
+        $income = $amountForSellFirstBuyOrder - $firstBuyOrder->invested - $order->exchangePair->commission_maker_percent;
+
+        /**
+         * Рассчитываем остальные параметры формулы
+         */
+        $rate = $order->required_rate;
+        $sell_rate = $rate + Math::getPercent($rate, $order->line->sell_rate_step);
+        $amountSum = 0;
+        $quantityRateSum = 0;
+        
+        foreach ($lastBuyOrders as $buyOrder) {
+            $amountSum += $buyOrder->invested;
+            $quantityRateSum += $buyOrder->received * $sell_rate;
         }
+        
+        return round(($income + $amountSum - $quantityRateSum) / ($sell_rate - $rate), $order->exchangePair->quantity_precision);
     }
 
     /**
