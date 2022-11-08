@@ -29,13 +29,6 @@ class ExchangePair extends BaseModel
         return [
             [
                 [
-                    'price_precision',
-                    'quantity_precision',
-                ],
-                'required'
-            ],
-            [
-                [
                     'id',
                     'exchange_id',
                     'pair_id',
@@ -46,6 +39,10 @@ class ExchangePair extends BaseModel
                     'max_price',
                     'min_amount',
                     'max_amount',
+                    'quantity_step',
+                    'price_step',
+                    'price_precision',
+                    'quantity_precision',
                 ],
                 'safe'
             ],
@@ -68,8 +65,10 @@ class ExchangePair extends BaseModel
             'pair_id' => 'ID пары',
             'min_quantity' => 'Минимальный допустимый объем',
             'max_quantity' => 'Максимальный допустимый объем',
+            'quantity_step' => 'Шаг объема',
             'min_price' => 'Минимальная допустимая цена',
             'max_price' => 'Максимальная допустимая цена',
+            'price_step' => 'Шаг цены',
             'min_amount' => 'Минимальная допустимая сумма покупки',
             'max_amount' => 'Максимальная допустимая сумма покупки',
             'price_precision' => 'Точность цены',
