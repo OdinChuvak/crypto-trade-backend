@@ -52,12 +52,16 @@ class TradingLine extends ActiveRecord
 
     public function allowedAmount()
     {
-        $pair = Pair::findOne(['id' => $this->pair_id]);
+        $pair = ExchangePair::findOne(['pair_id' => $this->pair_id]);
 
-        if (!($this->amount >= $pair->min_amount
-            && $this->amount <= $pair->max_amount)) {
-            $errorMsg = 'Invalid value for the amount field for the currency pair. The value must be between '.$pair->min_amount.' and '.$pair->max_amount.'.';
-            $this->addError('amount', $errorMsg);
+        if ($pair->min_amount && !($this->first_order_amount >= $pair->min_amount)) {
+            $errorMsg = 'Некорректное значение поля. Значение должно быть больше '.$pair->min_amount;
+            $this->addError('first_order_amount', $errorMsg);
+        }
+
+        if ($pair->max_amount && !($this->first_order_amount <= $pair->max_amount)) {
+            $errorMsg = 'Некорректное значение поля. Значение должно быть меньше '.$pair->max_amount;
+            $this->addError('first_order_amount', $errorMsg);
         }
     }
 
