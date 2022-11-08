@@ -37,6 +37,9 @@ interface ExchangeInterface
     /** Вернет список всех продаж в конкретном ордере (ордер может исполняться по частям) */
     public function getOrderTrades(Order $order): array;
 
+    /** Вернет список валютных пар с комиссиями на покупку и продажу (для конкретного юзера) */
+    public function getCommissions(): array;
+
     /** Отправит приватный запрос на биржу, получит ответ и обработает его */
     public function sendPrivateQuery(string $apiName, array $payload, string $method, string $apiKey);
 
