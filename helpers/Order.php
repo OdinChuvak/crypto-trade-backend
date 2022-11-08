@@ -171,7 +171,7 @@ class Order
                 'previous_order_id' => $previousOrder->id,
                 'continued_order_id' => $continuedOrder?->id,
                 'operation' => $order_type,
-                'required_trading_rate' => $order_rate,
+                'required_rate' => $order_rate,
             ], '');
 
         } else {

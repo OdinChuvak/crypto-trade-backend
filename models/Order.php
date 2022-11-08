@@ -98,7 +98,7 @@ class Order extends BaseModel
         if (!($this->required_rate >= $pair->min_price
             && $this->required_rate <= $pair->max_price)) {
             $errorMsg = 'Недопустимое значение цены. Допустимы значения от '.$pair->min_price.' до '.$pair->max_price.'.';
-            $this->addError('required_trading_rate', $errorMsg);
+            $this->addError('required_rate', $errorMsg);
         }
     }
 
@@ -117,7 +117,7 @@ class Order extends BaseModel
             Допустимы значения от '.$pair->min_quantity.' до '.$pair->max_quantity.'. 
             Пожалуйста, измените значение курса валюты или суммы, чтобы скорректировать количество.';
 
-            $this->addError('required_trading_rate', $errorMsg);
+            $this->addError('required_rate', $errorMsg);
         }
     }
 
