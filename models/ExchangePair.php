@@ -33,6 +33,13 @@ class ExchangePair extends BaseModel
                     'exchange_id',
                     'pair_id',
                     'is_delisted',
+                    'price_precision',
+                    'quantity_precision',
+                ],
+                'safe'
+            ],
+            [
+                [
                     'min_quantity',
                     'max_quantity',
                     'min_price',
@@ -41,10 +48,8 @@ class ExchangePair extends BaseModel
                     'max_amount',
                     'quantity_step',
                     'price_step',
-                    'price_precision',
-                    'quantity_precision',
                 ],
-                'safe'
+                'number'
             ],
             [
                 [

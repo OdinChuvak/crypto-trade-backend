@@ -41,14 +41,22 @@ class Order
          * рассчитанное на начальных данных
          */
         if (!$lastBuyOrders) {
-            return round($order->line->first_order_amount / $order->required_rate, $order->exchangePair->quantity_precision);
+            return self::numberValueNormalization(
+                $order->line->first_order_amount / $order->required_rate,
+                $order->exchangePair->quantity_precision,
+                $order->exchangePair->quantity_step
+            );
         }
 
         /**
          * Если исходный ордер является ордером на продажу, то вернем объем покупки
          */
         if ($order->operation === 'sell') {
-            return round(array_sum(array_column($lastBuyOrders, 'received')), $order->exchangePair->quantity_precision);
+            return self::numberValueNormalization(
+                array_sum(array_column($lastBuyOrders, 'received')),
+                $order->exchangePair->quantity_precision,
+                $order->exchangePair->quantity_step
+            );
         }
 
         /**
@@ -95,8 +103,12 @@ class Order
             $amountSum += $buyOrder->invested;
             $quantityRateSum += $buyOrder->received * $sell_rate;
         }
-        
-        return round(($income + $amountSum - $quantityRateSum) / ($sell_rate - $rate), $order->exchangePair->quantity_precision);
+
+        return self::numberValueNormalization(
+            ($income + $amountSum - $quantityRateSum) / ($sell_rate - $rate),
+            $order->exchangePair->quantity_precision,
+            $order->exchangePair->quantity_step
+        );
     }
 
     /**
@@ -191,5 +203,20 @@ class Order
         }
 
         return true;
+    }
+
+    /**
+     * Метод нормализует значения:
+     *  - округляет до знаков $precision после запятой,
+     *  - делает значение кратным $step.
+     *
+     * @param float $value
+     * @param int $precision
+     * @param float $step
+     * @return float
+     */
+    public static function numberValueNormalization(float $value, int $precision, float $step): float
+    {
+        return round($value - fmod($value, $step), $precision);
     }
 }
