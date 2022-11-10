@@ -5,10 +5,10 @@ namespace app\commands;
 use app\exceptions\ApiException;
 use app\helpers\Exchange;
 use app\models\ExchangePair;
+use app\models\ExchangeRate;
 use app\models\Order;
 use app\models\OrderLog;
 use app\models\TradingLine;
-use app\models\TradingLineLog;
 use Exception;
 
 class OrderController extends \yii\console\Controller
@@ -28,7 +28,7 @@ class OrderController extends \yii\console\Controller
     {
         $this->placement();
         $this->execution();
-        $this->extension();
+        //$this->extension();
 
         return true;
     }
@@ -44,7 +44,7 @@ class OrderController extends \yii\console\Controller
         /**
          * Берем все биржи
          */
-        $exchanges = \app\models\Exchange::find()->all();
+        $exchanges = \app\models\Exchange::findAll(['is_disabled' => false]);
 
         foreach ($exchanges as $exchange) {
 
@@ -125,77 +125,79 @@ class OrderController extends \yii\console\Controller
                 foreach ($orders as $order) {
 
                     /**
-                     * Получим данные по валютной паре ордера, для данной биржи
+                     * Обновим значения комиссий до актуальных
                      */
-                    $pair = ExchangePair::findOne([
-                        'pair_id' => $order->line->pair_id,
-                        'exchange_id' => $exchange->id,
-                    ]);
+                    \app\services\TradingLine::updateCommission($order->line);
 
-                    /**
-                     * Шлем заявку на создание ордера на бирже
-                     */
-                    $orderData = [
-                        'pair' => $pair,
-                        'quantity' => \app\helpers\Order::getQuantity($order->id),
-                        'price' => round($order->required_trading_rate, $pair->price_precision),
-                        'operation' => $order->operation,
-                    ];
+                    $pairRate = ExchangeRate::findOne(['pair_id' => $order->pair->id]);
 
-                    try {
+                    if (($order->operation === 'buy' && $order->required_rate >= $pairRate->value && $pairRate->dynamic === ExchangeRate::RATE_DYNAMIC_UP)
+                        || ($order->operation === 'sell' && $order->required_rate <= $pairRate->value && $pairRate->dynamic === ExchangeRate::RATE_DYNAMIC_DOWN))
+                    {
                         /**
-                         * Пытаемся создать ордер на бирже
+                         * Формируем данные для ордера
                          */
-                        $apiResult = $EXCHANGE->createOrder(...$orderData);
+                        $orderData = [
+                            'pair' => $order->pair,
+                            'quantity' => \app\helpers\Order::getQuantity($order),
+                            'price' => $order->required_rate,
+                            'operation' => $order->operation,
+                        ];
 
-                        /**
-                         * Дописываем в ордер, id ордера на бирже,
-                         * ставим метку о размещении и снимаем метку ошибки,
-                         * на случай, если предыдущая попытка размещения была с ошибкой
-                         */
-                        $order->exchange_order_id = $apiResult['exchange_order_id'];
-                        $order->is_placed = true;
-                        $order->is_error = false;
-                        $order->placed_at = date("Y-m-d H:i:s");
+                        try {
+                            /**
+                             * Пытаемся создать ордер на бирже
+                             */
+                            $apiResult = $EXCHANGE->createOrder(...$orderData);
 
-                        /**
-                         * Сохраняем ордер и пишем лог
-                         */
-                        $order->save();
+                            /**
+                             * Дописываем в ордер, id ордера на бирже,
+                             * ставим метку о размещении и снимаем метку ошибки,
+                             * на случай, если предыдущая попытка размещения была с ошибкой
+                             */
+                            $order->exchange_order_id = $apiResult['exchange_order_id'];
+                            $order->is_placed = true;
+                            $order->is_error = false;
+                            $order->placed_at = date("Y-m-d H:i:s");
 
-                        OrderLog::add([
-                            'user_id' => $user->id,
-                            'trading_line_id' => $order->line->id,
-                            'order_id' => $order->id,
-                            'type' => 'success',
-                            'message' => 'Ордер успешно размещен на бирже',
-                            'error_code' => null,
-                        ]);
+                            /**
+                             * Сохраняем ордер и пишем лог
+                             */
+                            $order->save();
 
-                    } catch (ApiException $apiException) {
-                        /**
-                         * Если ордер не удалось создать на бирже,
-                         * ставим метку об ошибке
-                         */
-                        $order->is_error = true;
+                            OrderLog::add([
+                                'user_id' => $user->id,
+                                'trading_line_id' => $order->line->id,
+                                'order_id' => $order->id,
+                                'type' => 'success',
+                                'message' => 'Ордер успешно размещен на бирже',
+                                'error_code' => null,
+                            ]);
 
-                        /**
-                         * Сохраняем и пишем лог ошибки
-                         */
-                        $order->save();
+                        } catch (ApiException $apiException) {
+                            /**
+                             * Если ордер не удалось создать на бирже,
+                             * ставим метку об ошибке
+                             */
+                            $order->is_error = true;
 
-                        OrderLog::add([
-                            'user_id' => $user->id,
-                            'trading_line_id' => $order->line->id,
-                            'order_id' => $order->id,
-                            'type' => 'error',
-                            'message' => $apiException->getMessage(),
-                            'error_code' => $apiException->getCode(),
-                        ]);
+                            /**
+                             * Сохраняем и пишем лог ошибки
+                             */
+                            $order->save();
+
+                            OrderLog::add([
+                                'user_id' => $user->id,
+                                'trading_line_id' => $order->line->id,
+                                'order_id' => $order->id,
+                                'type' => 'error',
+                                'message' => $apiException->getMessage(),
+                                'error_code' => $apiException->getCode(),
+                            ]);
+                        }
                     }
                 }
             }
-
         }
 
         return true;
@@ -212,7 +214,7 @@ class OrderController extends \yii\console\Controller
         /**
          * Берем все биржи
          */
-        $exchanges = \app\models\Exchange::find()->all();
+        $exchanges = \app\models\Exchange::findAll(['is_disabled' => false]);
 
         foreach ($exchanges as $exchange) {
 
@@ -285,7 +287,7 @@ class OrderController extends \yii\console\Controller
                  * Шлем запрос на получение списка всех активных ордеров пользователя
                  */
                 try {
-                    $activeOrders = $EXCHANGE->getOpenOrdersList();
+                    $exchangeOrderIds = $EXCHANGE->getOpenOrdersList();
                 } catch (ApiException $apiException) {
                     continue;
                 }
@@ -299,11 +301,6 @@ class OrderController extends \yii\console\Controller
                         'pair_id' => $order->line->pair_id,
                         'exchange_id' => $exchange->id,
                     ]);
-
-                    /**
-                     * Ищем ордер в списке активных ордеров на бирже
-                     */
-                    $exchangeOrderIds = array_column($activeOrders, 'exchange_order_id');
 
                     /**
                      * Если ордер найден в списке активных ордеров,
@@ -370,9 +367,9 @@ class OrderController extends \yii\console\Controller
                          */
                         $executionData = [
                             'actual_trading_rate' => round($actual_trading_rate / $k, $pair->price_precision),
-                            'invested' => $order->operation === 'buy' ? round($invested, $pair->price_precision) : $invested,
-                            'received' => $order->operation === 'buy' ? $received : round($received, $pair->price_precision),
-                            'commission_amount' => $order->operation === 'buy' ? $commission : round($commission, $pair->price_precision),
+                            'invested' => round($invested, $order->operation === 'buy' ? $pair->price_precision : $pair->quantity_precision),
+                            'received' => round($received, $order->operation === 'buy' ? $pair->price_precision : $pair->quantity_precision),
+                            'commission_amount' => round($commission, $order->operation === 'buy' ? $pair->price_precision : $pair->quantity_precision),
                             'is_executed' => true,
                             'is_error' => false,
                             'executed_at' => date("Y-m-d H:i:s"),
@@ -429,7 +426,7 @@ class OrderController extends \yii\console\Controller
         /**
          * Берем все биржи
          */
-        $exchanges = \app\models\Exchange::find()->all();
+        $exchanges = \app\models\Exchange::findAll(['is_disabled' => false]);
 
         foreach ($exchanges as $exchange) {
 
@@ -519,7 +516,7 @@ class OrderController extends \yii\console\Controller
                          * шлем запрос на отмену
                          */
                         if ($lineOrder->is_placed) {
-                            $EXCHANGE->cancelOrder($lineOrder->exchange_order_id);
+                            $EXCHANGE->cancelOrder($lineOrder);
                         }
 
                         /**
@@ -544,8 +541,14 @@ class OrderController extends \yii\console\Controller
                     /**
                      * Пытаемся создать ответные ордера для текущего исполненного
                      */
-                    $is_buy_order_create = \app\helpers\Order::createOrder($order, 'buy');
-                    $is_sell_order_create = \app\helpers\Order::createOrder($order, 'sell');
+                    \app\helpers\Order::createOrder($order, 'buy');
+
+                    /**
+                     * Ордер на продажу выставляем только в ответна исполненный ордер на покупку
+                     */
+                    if ($order->operation === 'buy') {
+                        \app\helpers\Order::createOrder($order, 'sell');
+                    }
 
                     /**
                      * Далее пометим текущий ордер как продолженный и сохраним
