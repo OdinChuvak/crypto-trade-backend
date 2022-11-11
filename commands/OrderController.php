@@ -322,7 +322,7 @@ class OrderController extends \yii\console\Controller
                      * пытаемся получить список продаж по ордеру
                      */
                     try {
-                        $orderTrades = $EXCHANGE->getOrderTrades($order->exchange_order_id);
+                        $orderTrades = $EXCHANGE->getOrderTrades($order);
 
                         /**
                          * Если же информация по продажам ордера есть,
@@ -333,7 +333,7 @@ class OrderController extends \yii\console\Controller
                          * - актуальная сумма комиссии
                          */
                         $k = 0;
-                        $actual_trading_rate = 0;
+                        $actual_rate = 0;
                         $invested = 0;
                         $received = 0;
                         $commission = 0;
@@ -356,7 +356,7 @@ class OrderController extends \yii\console\Controller
                              * Комиссия взимается с получаемой валюты
                              */
 
-                            $actual_trading_rate += $trade['price'];
+                            $actual_rate += $trade['price'];
                             $invested += $order->operation === 'buy'
                                 ? $trade['amount']
                                 : $trade['quantity'];
@@ -373,7 +373,7 @@ class OrderController extends \yii\console\Controller
                          * Фиксируем данные продаж в ордере и сохраняем его
                          */
                         $executionData = [
-                            'actual_trading_rate' => round($actual_trading_rate / $k, $pair->price_precision),
+                            'actual_rate' => round($actual_rate / $k, $pair->price_precision),
                             'invested' => round($invested, $order->operation === 'buy' ? $pair->price_precision : $pair->quantity_precision),
                             'received' => round($received, $order->operation === 'buy' ? $pair->price_precision : $pair->quantity_precision),
                             'commission_amount' => round($commission, $order->operation === 'buy' ? $pair->price_precision : $pair->quantity_precision),

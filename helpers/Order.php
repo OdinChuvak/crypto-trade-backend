@@ -132,8 +132,8 @@ class Order
          * Рассчитаем курс для текущей операции
          */
         $order_rate = $order_type === 'buy'
-            ? (100 * $previousOrder->actual_trading_rate) / (100 + $previousOrder->line->exchange_rate_step)
-            : (1 + ($previousOrder->line->exchange_rate_step / 100)) * $previousOrder->actual_trading_rate;
+            ? (100 * $previousOrder->actual_rate) / (100 + $previousOrder->line->buy_rate_step)
+            : (1 + ($previousOrder->line->sell_rate_step / 100)) * $previousOrder->actual_rate;
 
         \app\models\Order::add([
             'user_id' => $previousOrder->user_id,

@@ -84,7 +84,7 @@ class TradingLine extends ActiveRecord
                 'pair_id' => 'pair_id',
                 'exchange_id' => 'exchange_id',
             ])
-            ->orderBy(['created_at' => SORT_DESC])
+            ->orderBy(['updated_at' => SORT_DESC])
             ->limit(1);
     }
 
