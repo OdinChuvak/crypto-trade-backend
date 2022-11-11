@@ -1,17 +1,16 @@
 <?php
 
-namespace app\helpers;
+namespace app\enums;
 
 /**
- * Class AppError
+ * Class AppError - Класс внутренних ошибок сервиса
+ *
  * @package app\helpers
- * Класс внутренних ошибок сервиса
- * Реализован, для избежания хард привязки кодов ошибок и сообщений
  */
 class AppError
 {
     /**
-     * Отсутствует файл с ключами аутентификации на бирже Exmo
+     * Отсутствует файл с ключами аутентификации на бирже
      */
     const NO_AUTH_KEY_FILE = [
         'code' => 1000,
@@ -67,7 +66,7 @@ class AppError
     /**
      * Превышена скорость запросов
      */
-    const RATE_LIMIT_IS_EXCEEDED = [
+    const REQUESTS_LIMIT_IS_EXCEEDED = [
         'code' => 1006,
         'type' => 'error',
         'message' => 'Превышен лимит запросов'
@@ -101,57 +100,57 @@ class AppError
     ];
 
     /**
+     * Цена покупки меньше допустимого минимума
+     */
+    const PRICE_LESS = [
+        'code' => 2004,
+        'type' => 'error',
+        'message' => 'Цена меньше допустимого минимума для этой пары'
+    ];
+
+    /**
+     * Цена покупки больше допустимого минимума
+     */
+    const PRICE_MORE = [
+        'code' => 2005,
+        'type' => 'error',
+        'message' => 'Цена больше допустимого максимума для данной пары'
+    ];
+
+    /**
+     * Сумма покупки меньше допустимого минимума
+     */
+    const AMOUNT_LESS = [
+        'code' => 2006,
+        'type' => 'error',
+        'message' => 'Сумма покупки меньше допустимого минимума для этой пары'
+    ];
+
+    /**
+     * Сумма покупки больше допустимого минимума
+     */
+    const AMOUNT_MORE = [
+        'code' => 2007,
+        'type' => 'error',
+        'message' => 'Сумма покупки больше максимально допустимого для данной пары'
+    ];
+
+    /**
      * Ордер не найден
      */
     const ORDER_NOT_FOUND = [
-        'code' => 2004,
+        'code' => 2008,
         'type' => 'error',
         'message' => 'Ордер не найден'
     ];
 
     /**
-     * Проблема создания ордера на покупку
+     * Проблема создания ордера на бирже по неопределенным причинам
      */
-    const BUY_ORDER_CREATION_PROBLEM = [
-        'code' => 2005,
-        'type' => 'error',
-        'message' => 'Не удалось создать ордер на покупку'
-    ];
-
-    /**
-     * Проблема создания ордера на продажу
-     */
-    const SELL_ORDER_CREATION_PROBLEM = [
-        'code' => 2006,
-        'type' => 'error',
-        'message' => 'Не удалось создать ордер на продажу'
-    ];
-
-    /**
-     * Превышение допустимого количества знаков после запятой в цене валютной пары
-     */
-    const MORE_DECIMAL_PLACES = [
-        'code' => 2007,
-        'type' => 'error',
-        'message' => 'Превышено допустимое количество знаков после запятой в цене'
-    ];
-
-    /**
-     * Количество закупаемой валюты меньше допустимого минимума
-     */
-    const AMOUNT_LESS = [
-        'code' => 2008,
-        'type' => 'error',
-        'message' => 'Общая сумма в ордере меньше допустимого минимума для этой пары'
-    ];
-
-    /**
-     * Количество закупаемой валюты меньше допустимого минимума
-     */
-    const AMOUNT_MORE = [
+    const ORDER_CREATION_PROBLEM = [
         'code' => 2009,
         'type' => 'error',
-        'message' => 'Общая сумма в ордере больше максимально допустимого для данной пары'
+        'message' => 'Не удалось создать ордер на бирже по неопределенным причинам'
     ];
 
     /**
@@ -162,30 +161,4 @@ class AppError
         'type' => 'error',
         'message' => 'Неизвестная ошибка'
     ];
-
-    public static function errorMap(): array
-    {
-        return [
-            '40005' => self::INCORRECT_SIGNATURE,
-            '40017' => self::WRONG_API_KEY,
-            '40030' => self::KEY_IS_NOT_ACTIVATED,
-            '50018' => self::PARAMETER_ERROR,
-            '50052' => self::INSUFFICIENT_FUNDS,
-            '50054' => self::INSUFFICIENT_FUNDS,
-            '50277' => self::QUANTITY_LESS,
-            '50304' => self::ORDER_NOT_FOUND,
-        ];
-    }
-
-    public static function getMappingError($errorCode): array
-    {
-        return self::errorMap()[$errorCode] ?? self::UNKNOWN_ERROR;
-    }
-
-    public static function getExchangeErrorFromMessage($errorMessage)
-    {
-        preg_match('/\d{5}/', $errorMessage, $exchange_error_code);
-
-        return $exchange_error_code[0];
-    }
 }

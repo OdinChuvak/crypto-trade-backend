@@ -2,7 +2,7 @@
 
 namespace app\exchanges;
 
-use app\helpers\AppError;
+use app\enums\AppError;
 use app\models\UserLog;
 use Exception;
 

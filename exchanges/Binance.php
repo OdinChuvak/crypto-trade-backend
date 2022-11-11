@@ -4,7 +4,7 @@ namespace app\exchanges;
 
 use app\clients\CurlClient;
 use app\exceptions\ApiException;
-use app\helpers\AppError;
+use app\enums\AppError;
 use app\models\Order;
 use app\models\Pair;
 use Exception;
@@ -29,8 +29,28 @@ class Binance extends BaseExchange implements ExchangeInterface
     public static function getExchangeErrorMap(): array
     {
         return [
-            '-1013' => AppError::AMOUNT_LESS,
+            '-1099' => AppError::NO_AUTH_KEY_FILE,
+            '-2014' => AppError::WRONG_API_KEY,
             '-1022' => AppError::INCORRECT_SIGNATURE,
+            'KEY_IS_NOT_ACTIVATED' => AppError::KEY_IS_NOT_ACTIVATED,
+            '-1100' => AppError::PARAMETER_ERROR,
+            '-1101' => AppError::PARAMETER_ERROR,
+            '-1102' => AppError::PARAMETER_ERROR,
+            '-1103' => AppError::PARAMETER_ERROR,
+            '-1104' => AppError::PARAMETER_ERROR,
+            '-1105' => AppError::PARAMETER_ERROR,
+            '-1106' => AppError::PARAMETER_ERROR,
+            'HEADER_KEY_IS_NOT_FIND' => AppError::HEADER_KEY_IS_NOT_FIND,
+            '-1003' => AppError::REQUESTS_LIMIT_IS_EXCEEDED,
+            '-5002' => AppError::INSUFFICIENT_FUNDS,
+            'QUANTITY_LESS' => AppError::QUANTITY_LESS,
+            'QUANTITY_MORE' => AppError::QUANTITY_MORE,
+            'PRICE_LESS' => AppError::PRICE_LESS,
+            'PRICE_MORE' => AppError::PRICE_MORE,
+            'AMOUNT_LESS' => AppError::AMOUNT_LESS,
+            'AMOUNT_MORE' => AppError::AMOUNT_MORE,
+            '-2013' => AppError::ORDER_NOT_FOUND,
+            'ORDER_CREATION_PROBLEM' => AppError::ORDER_CREATION_PROBLEM,
         ];
     }
 

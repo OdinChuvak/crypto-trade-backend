@@ -3,7 +3,7 @@
 namespace app\exchanges;
 
 use app\clients\CurlClient;
-use app\helpers\AppError;
+use app\enums\AppError;
 use app\exceptions\ApiException;
 use app\models\Pair;
 use Exception;
