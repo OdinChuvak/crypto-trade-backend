@@ -26,6 +26,10 @@ class CurlClient implements HttpClientInterface
      */
     public static function sendQuery(string $url, string $method = "GET", array $payload = null, array $headers = null, array $params = null): bool|string
     {
+        \Yii::info("Запрос: $url", 'curl-client');
+        \Yii::info("Метод: $method", 'curl-client');
+        \Yii::info("Нагрузка: " . print_r($payload, true), 'curl-client');
+
         // Дефолтные параметры CURL
         $defaultOptions = self::getDefaultCurlOptions();
 
@@ -71,6 +75,8 @@ class CurlClient implements HttpClientInterface
 
         // Шлем запрос
         $result = curl_exec($curl);
+
+        \Yii::info("Ответ: $result\n", 'curl-client');
 
         if ($result === false) {
             throw new Exception('Не удалось получить ответ: ' . curl_error($curl));

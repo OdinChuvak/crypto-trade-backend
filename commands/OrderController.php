@@ -611,7 +611,7 @@ class OrderController extends \yii\console\Controller
                 /**
                  * Если последний исполненный ордер линии - на покупку, переходим к следующей линии
                  */
-                if ($line->lastExecutedOrder->operation === 'buy') {
+                if (!$line->lastExecutedOrder || $line->lastExecutedOrder->operation === 'buy') {
                     continue;
                 }
 

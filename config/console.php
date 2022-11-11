@@ -19,11 +19,20 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'log' => [
+            'flushInterval' => 1,
             'targets' => [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                     'logVars' => [],
+                ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info'],
+                    'categories' => ['curl-client'],
+                    'logFile' => '@runtime/logs/process.log',
+                    'logVars' => [],
+                    'exportInterval' => 1,
                 ],
             ],
         ],
