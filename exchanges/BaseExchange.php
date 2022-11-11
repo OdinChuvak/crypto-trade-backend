@@ -3,7 +3,7 @@
 namespace app\exchanges;
 
 use app\enums\AppError;
-use app\models\UserLog;
+use app\models\Notice;
 use Exception;
 
 abstract class BaseExchange
@@ -24,8 +24,10 @@ abstract class BaseExchange
         $this->userKeys = new \Key($user_id, $exchange_class_name);
 
         if (!$this->userKeys->is_find) {
-            UserLog::add([
+            Notice::add([
                 'user_id' => $user_id,
+                'reference' => 'user',
+                'reference_id' => $user_id,
                 'type' => 'error',
                 'message' => AppError::NO_AUTH_KEY_FILE['message'],
                 'error_code' => AppError::NO_AUTH_KEY_FILE['code'],

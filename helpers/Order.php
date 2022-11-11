@@ -3,7 +3,6 @@
 namespace app\helpers;
 
 use app\models\ExchangePair;
-use app\models\TradingLineLog;
 use app\utils\Math;
 
 class Order

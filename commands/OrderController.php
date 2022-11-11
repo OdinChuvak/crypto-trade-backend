@@ -6,8 +6,8 @@ use app\exceptions\ApiException;
 use app\helpers\Exchange;
 use app\models\ExchangePair;
 use app\models\ExchangeRate;
+use app\models\Notice;
 use app\models\Order;
-use app\models\OrderLog;
 use app\models\TradingLine;
 use app\utils\Math;
 use Exception;
@@ -103,9 +103,12 @@ class OrderController extends \yii\console\Controller
                  *
                  * Вытащим идентификаторы ордеров, о которых в предыдущие 10 минут вносились логи ошибок
                  */
-                $errorOrders = OrderLog::find()
-                    ->select('order_id')
-                    ->where(['type' => 'error'])
+                $errorOrders = Notice::find()
+                    ->select('reference_id')
+                    ->where([
+                        'reference' => 'order',
+                        'type' => 'error',
+                    ])
                     ->andWhere(['>', 'created_at', date('Y-m-d H:i:s', time() - self::ERROR_ORDER_REQUEST_TIME_LIMIT)])
                     ->distinct()
                     ->column();
@@ -172,10 +175,10 @@ class OrderController extends \yii\console\Controller
                              */
                             $order->save();
 
-                            OrderLog::add([
+                            Notice::add([
                                 'user_id' => $user->id,
-                                'trading_line_id' => $order->line->id,
-                                'order_id' => $order->id,
+                                'reference' => 'order',
+                                'reference_id' => $order->id,
                                 'type' => 'success',
                                 'message' => 'Ордер успешно размещен на бирже',
                                 'error_code' => null,
@@ -189,14 +192,14 @@ class OrderController extends \yii\console\Controller
                             $order->is_error = true;
 
                             /**
-                             * Сохраняем и пишем лог ошибки
+                             * Сохраняем и пишем уведомление ошибки
                              */
                             $order->save();
 
-                            OrderLog::add([
+                            Notice::add([
                                 'user_id' => $user->id,
-                                'trading_line_id' => $order->line->id,
-                                'order_id' => $order->id,
+                                'reference' => 'order',
+                                'reference_id' => $order->id,
                                 'type' => 'error',
                                 'message' => $apiException->getMessage(),
                                 'error_code' => $apiException->getCode(),
@@ -386,12 +389,12 @@ class OrderController extends \yii\console\Controller
                         $order->save();
 
                         /**
-                         * Не забываем зафиксировать лог
+                         * Не забываем зафиксировать уведомление
                          */
-                        OrderLog::add([
+                        Notice::add([
                             'user_id' => $user->id,
-                            'trading_line_id' => $order->line->id,
-                            'order_id' => $order->id,
+                            'reference' => 'order',
+                            'reference_id' => $order->id,
                             'type' => 'success',
                             'message' => 'The order has been successfully executed',
                             'error_code' => null,
@@ -406,10 +409,10 @@ class OrderController extends \yii\console\Controller
                         $order->is_error = true;
                         $order->save();
 
-                        OrderLog::add([
+                        Notice::add([
                             'user_id' => $user->id,
-                            'trading_line_id' => $order->line->id,
-                            'order_id' => $order->id,
+                            'reference' => 'order',
+                            'reference_id' => $order->id,
                             'type' => 'error',
                             'message' => $apiException->getMessage(),
                             'error_code' => $apiException->getCode(),
@@ -527,12 +530,12 @@ class OrderController extends \yii\console\Controller
                         }
 
                         /**
-                         * Добавим в лог запись о том, что ордер отменен
+                         * Добавим в уведомление о том, что ордер отменен
                          */
-                        OrderLog::add([
+                        Notice::add([
                             'user_id' => $user->id,
-                            'trading_line_id' => $lineOrder->trading_line_id,
-                            'order_id' => $lineOrder->id,
+                            'reference' => 'order',
+                            'reference_id' => $lineOrder->id,
                             'type' => 'success',
                             'message' => 'Ордер успешно отменен! (Отменивший ордер - #' . $order->id . ')',
                             'error_code' => null,
@@ -566,12 +569,12 @@ class OrderController extends \yii\console\Controller
                     $order->save();
 
                     /**
-                     * Но и не забудем добавить соответствующую запись в лог
+                     * Но и не забудем добавить соответствующую запись в уведомления
                      */
-                    OrderLog::add([
+                    Notice::add([
                         'user_id' => $user->id,
-                        'trading_line_id' => $order->line->id,
-                        'order_id' => $order->id,
+                        'reference' => 'order',
+                        'reference_id' => $order->id,
                         'type' => 'success',
                         'message' => 'Ордер успешно продолжен!',
                         'error_code' => null,
@@ -663,12 +666,12 @@ class OrderController extends \yii\console\Controller
                     }
 
                     /**
-                     * Добавим в лог запись о том, что ордер отменен
+                     * Добавим в уведомление о том, что ордер отменен
                      */
-                    OrderLog::add([
+                    Notice::add([
                         'user_id' => $lineOrder->user_id,
-                        'trading_line_id' => $lineOrder->trading_line_id,
-                        'order_id' => $lineOrder->id,
+                        'reference' => 'order',
+                        'reference_id' => $lineOrder->id,
                         'type' => 'success',
                         'message' => 'Ордер успешно отменен!',
                         'error_code' => null,
@@ -692,12 +695,12 @@ class OrderController extends \yii\console\Controller
                 ]);
 
                 /**
-                 * Но и не забудем добавить соответствующую запись в лог
+                 * Но и не забудем добавить соответствующую запись в уведомления
                  */
-                OrderLog::add([
+                Notice::add([
                     'user_id' => $newBuyOrder->user_id,
-                    'trading_line_id' => $newBuyOrder->trading_line_id,
-                    'order_id' => $newBuyOrder->id,
+                    'reference' => 'order',
+                    'reference_id' => $newBuyOrder->id,
                     'type' => 'success',
                     'message' => 'Ордер успешно создан!',
                     'error_code' => null,
