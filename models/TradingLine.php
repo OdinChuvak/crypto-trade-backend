@@ -65,12 +65,12 @@ class TradingLine extends ActiveRecord
         }
     }
 
-    public function getPair(): \yii\db\ActiveQuery
+    public function getPair(): ActiveQuery
     {
         return $this->hasOne(Pair::class, ['id' => 'pair_id']);
     }
 
-    public function getExchangePair(): \yii\db\ActiveQuery
+    public function getExchangePair(): ActiveQuery
     {
         return $this->hasOne(ExchangePair::class, [
             'pair_id' => 'pair_id',
@@ -78,7 +78,7 @@ class TradingLine extends ActiveRecord
         ]);
     }
 
-    public function getExchangeRate(): \yii\db\ActiveQuery
+    public function getExchangeRate(): ActiveQuery
     {
         return $this->hasOne(ExchangeRate::class, [
                 'pair_id' => 'pair_id',
@@ -88,9 +88,23 @@ class TradingLine extends ActiveRecord
             ->limit(1);
     }
 
-    public function getCurrentOrders(): \yii\db\ActiveQuery
+    public function getCurrentOrders(): ActiveQuery
     {
         return $this->hasMany(Order::class, ['trading_line_id' => 'id'])
             ->onCondition(['is_canceled' => false, 'is_continued' => false]);
+    }
+
+    /**
+     * Последний исполненный ордер линии
+     *
+     * @return ActiveQuery
+     */
+    public function getLastExecutedOrder(): ActiveQuery
+    {
+        return $this->hasOne(Order::class, [
+                'trading_line_id' => 'id'
+            ])
+            ->onCondition(['is_executed' => true])
+            ->orderBy(['executed_at' => SORT_DESC]);
     }
 }

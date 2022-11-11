@@ -9,6 +9,7 @@ use app\models\ExchangeRate;
 use app\models\Order;
 use app\models\OrderLog;
 use app\models\TradingLine;
+use app\utils\Math;
 use Exception;
 
 class OrderController extends \yii\console\Controller
@@ -17,6 +18,11 @@ class OrderController extends \yii\console\Controller
      * Лимит времени в секундах, который нужно выжидать перед повторным запросом для ордеров, завершившихся с ошибкой
      */
     const ERROR_ORDER_REQUEST_TIME_LIMIT = 600;
+
+    /**
+     * Срок годности курса валют
+     */
+    const ACTUAL_RATE_TIME = 300;
 
     /**
      * Поочередный запуск всех скриптов
@@ -28,7 +34,8 @@ class OrderController extends \yii\console\Controller
     {
         $this->placement();
         $this->execution();
-        //$this->extension();
+        $this->extension();
+        $this->renewal();
 
         return true;
     }
@@ -574,5 +581,128 @@ class OrderController extends \yii\console\Controller
         }
 
         return true;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function renewal()
+    {
+        /**
+         * Берем все биржи
+         */
+        $exchanges = \app\models\Exchange::findAll(['is_disabled' => false]);
+
+        foreach ($exchanges as $exchange) {
+
+            /**
+             * Берем все торговые линии конкретной биржи
+             */
+            $lines = TradingLine::find()
+                ->with(['lastExecutedOrder', 'exchangeRate'])
+                ->where([
+                    'exchange_id' => $exchange->id,
+                    'is_stopped' => 0,
+                ])
+                ->all();
+
+            foreach ($lines as $line) {
+
+                /**
+                 * Если последний исполненный ордер линии - на покупку, переходим к следующей линии
+                 */
+                if ($line->lastExecutedOrder->operation === 'buy') {
+                    continue;
+                }
+
+                /**
+                 * Проверяем актуальность курса для линии
+                 */
+                if (time() - $line->exchangeRate->updated_at > self::ACTUAL_RATE_TIME) {
+                    continue;
+                }
+
+                /**
+                 * Проверим вырос ли курс от курса последней продажи более чем на шаг TradingLine::sell_rate_step
+                 */
+                if ($line->lastExecutedOrder->actual_rate + Math::getPercent($line->lastExecutedOrder->actual_rate, $this->line->sell_rate_step) < $line->exchangeRate->value) {
+                    continue;
+                }
+
+                /**
+                 * Если курс все же пошел "сильно" выше
+                 * Получаем экземпляр биржи с авторизацией под конкретного юзера
+                 */
+                $EXCHANGE = Exchange::getObject($exchange->id, $line->user_id);
+
+                /**
+                 * Если авторизация не удалась, переходим к следующей торговой линии
+                 */
+                if (!$EXCHANGE) {
+                    continue;
+                }
+
+                /**
+                 * В первую очередь, отменим все неисполненные ордера в линии,
+                 * так как будут созданы новые, более актуальные ордера
+                 */
+                $lineOrders = Order::findAll([
+                    '`order`.`trading_line_id`' => $line->id,
+                    '`order`.`is_executed`' => false,
+                    '`order`.`is_canceled`' => false,
+                ]);
+
+                foreach ($lineOrders as $lineOrder) {
+
+                    /**
+                     * Если ордер уже был размещен на бирже,
+                     * шлем запрос на отмену
+                     */
+                    if ($lineOrder->is_placed) {
+                        $EXCHANGE->cancelOrder($lineOrder);
+                    }
+
+                    /**
+                     * Добавим в лог запись о том, что ордер отменен
+                     */
+                    OrderLog::add([
+                        'user_id' => $lineOrder->user_id,
+                        'trading_line_id' => $lineOrder->trading_line_id,
+                        'order_id' => $lineOrder->id,
+                        'type' => 'success',
+                        'message' => 'Ордер успешно отменен!',
+                        'error_code' => null,
+                    ]);
+
+                    /**
+                     * Ставим метку отмененного ордера и сохраняем
+                     */
+                    $lineOrder->is_canceled = true;
+                    $lineOrder->save();
+                }
+
+                /**
+                 * Создадим новый ордер на покупку
+                 */
+                $newBuyOrder = Order::add([
+                    'user_id' => $line->user_id,
+                    'trading_line_id' => $line->id,
+                    'operation' => 'buy',
+                    'required_rate' => $line->exchangeRate->value
+                ]);
+
+                /**
+                 * Но и не забудем добавить соответствующую запись в лог
+                 */
+                OrderLog::add([
+                    'user_id' => $newBuyOrder->user_id,
+                    'trading_line_id' => $newBuyOrder->trading_line_id,
+                    'order_id' => $newBuyOrder->id,
+                    'type' => 'success',
+                    'message' => 'Ордер успешно создан!',
+                    'error_code' => null,
+                ]);
+            }
+        }
     }
 }
