@@ -5,7 +5,7 @@ namespace app\enums;
 /**
  * Class AppError - Класс внутренних ошибок сервиса
  *
- * @package app\helpers
+ * @package app\enums
  */
 class AppError
 {

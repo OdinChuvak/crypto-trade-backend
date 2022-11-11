@@ -45,7 +45,7 @@ class ExchangeRateController extends \yii\console\Controller
             /**
              * Создаем объект работы с биржей
              */
-            $EXCHANGE = \app\helpers\Exchange::getClass($exchangeModel->id);
+            $EXCHANGE = \app\services\Exchange::getClass($exchangeModel->id);
 
             /**
              * Пробуем получить актуальную информацию по курсам валют биржи ("Бегущая строка")

@@ -2,7 +2,6 @@
 
 namespace app\services;
 
-use app\helpers\Exchange;
 use Exception;
 
 class TradingLine

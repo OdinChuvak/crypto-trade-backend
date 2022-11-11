@@ -29,7 +29,7 @@ class CurrencyPairUpdateController extends Controller
         $exchangePairsList = [];
 
         foreach ($exchangeModels as $exchangeModel) {
-            $EXCHANGE = \app\helpers\Exchange::getClass($exchangeModel->id);
+            $EXCHANGE = \app\services\Exchange::getClass($exchangeModel->id);
 
             try {
                 $exchangePairsList = $EXCHANGE::getCurrencyPairsList();

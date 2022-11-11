@@ -3,7 +3,7 @@
 namespace app\commands;
 
 use app\exceptions\ApiException;
-use app\helpers\Exchange;
+use app\services\Exchange;
 use app\models\ExchangePair;
 use app\models\ExchangeRate;
 use app\models\Notice;
@@ -149,7 +149,7 @@ class OrderController extends \yii\console\Controller
                          */
                         $orderData = [
                             'pair' => $order->pair,
-                            'quantity' => \app\helpers\Order::getQuantity($order),
+                            'quantity' => \app\services\Order::getQuantity($order),
                             'price' => $order->required_rate,
                             'operation' => $order->operation,
                         ];
@@ -551,13 +551,13 @@ class OrderController extends \yii\console\Controller
                     /**
                      * Пытаемся создать ответные ордера для текущего исполненного
                      */
-                    \app\helpers\Order::createOrder($order, 'buy');
+                    \app\services\Order::createOrder($order, 'buy');
 
                     /**
                      * Ордер на продажу выставляем только в ответна исполненный ордер на покупку
                      */
                     if ($order->operation === 'buy') {
-                        \app\helpers\Order::createOrder($order, 'sell');
+                        \app\services\Order::createOrder($order, 'sell');
                     }
 
                     /**
