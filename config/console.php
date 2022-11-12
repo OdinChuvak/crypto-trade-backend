@@ -33,6 +33,8 @@ $config = [
                     'logFile' => '@runtime/logs/process.log',
                     'logVars' => [],
                     'exportInterval' => 1,
+                    'maxFileSize' => 1024 * 5,
+                    'maxLogFiles' => 5,
                 ],
             ],
         ],
