@@ -82,7 +82,7 @@ class ExchangeRateController extends \yii\console\Controller
                             'exchange_id' => $exchangeModel->id,
                             'pair_id' => $pair->id,
                             'value' => $tickerItem['exchange_rate'],
-                            'rate_dynamic' => $rateDynamic,
+                            'dynamic' => $rateDynamic,
                         ], '');
 
                         $exchangeRate->save();
