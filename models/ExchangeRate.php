@@ -16,6 +16,11 @@ class ExchangeRate extends BaseModel
     // Курс не меняется
     const RATE_DYNAMIC_NOT = 0;
 
+    /**
+     * Срок годности курса валют
+     */
+    const ACTUAL_RATE_TIME = 300;
+
     public function behaviors(): array
     {
         return [
