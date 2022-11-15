@@ -137,7 +137,7 @@ class OrderController extends \yii\console\Controller
                     /**
                      * Обновим значения комиссий до актуальных
                      */
-                    \app\services\TradingLine::updateCommission($order->line);
+                    \app\services\TradingLine::updateCommission($EXCHANGE, $order->line);
 
                     $pairRate = ExchangeRate::findOne(['pair_id' => $order->pair->id]);
 
