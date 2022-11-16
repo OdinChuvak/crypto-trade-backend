@@ -93,7 +93,7 @@ class Order
         /**
          * Рассчитываем остальные параметры формулы
          */
-        $rate = $order->required_rate;
+        $rate = $order->exchangePair->rate;
         $sell_rate = $rate + Math::getPercent($rate, $order->line->sell_rate_step);
         $amountSum = 0;
         $quantityRateSum = 0;
