@@ -633,7 +633,7 @@ class OrderController extends \yii\console\Controller
                 /**
                  * Проверим вырос ли курс от курса последней продажи более чем на шаг TradingLine::sell_rate_step
                  */
-                if ($line->lastExecutedOrder->actual_rate + Math::getPercent($line->lastExecutedOrder->actual_rate, $line->sell_rate_step) < $line->exchangeRate->value) {
+                if (($line->lastExecutedOrder->actual_rate + Math::getPercent($line->lastExecutedOrder->actual_rate, $line->sell_rate_step)) > $line->exchangeRate->value) {
                     continue;
                 }
 
