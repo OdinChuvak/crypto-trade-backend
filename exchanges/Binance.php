@@ -49,8 +49,8 @@ class Binance extends BaseExchange implements ExchangeInterface
             'PRICE_MORE' => AppError::PRICE_MORE,
             'AMOUNT_LESS' => AppError::AMOUNT_LESS,
             'AMOUNT_MORE' => AppError::AMOUNT_MORE,
+            '-2010' => AppError::ORDER_CREATION_PROBLEM,
             '-2013' => AppError::ORDER_NOT_FOUND,
-            'ORDER_CREATION_PROBLEM' => AppError::ORDER_CREATION_PROBLEM,
         ];
     }
 
@@ -297,7 +297,11 @@ class Binance extends BaseExchange implements ExchangeInterface
     {
         // если запрос завершился неудачей, выбросим исключение
         if (isset($apiData['code'])) {
-            $error = self::getExchangeErrorMap()[self::getExchangeErrorCode($apiData)];
+            $errorCode = self::getExchangeErrorCode($apiData);
+            $binanceErrors = self::getExchangeErrorMap();
+            $error = array_key_exists($errorCode, $binanceErrors)
+                ? $binanceErrors[$errorCode] : AppError::UNKNOWN_ERROR;
+
             throw new ApiException($error['message'], $error['code']);
         }
 
