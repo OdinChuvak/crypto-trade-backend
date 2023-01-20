@@ -36,7 +36,14 @@ class TradingLine extends ActiveRecord
                 'safe'
             ],
             ['first_order_amount', 'allowedAmount'],
-            ['is_stopped', 'boolean', 'message' => 'This boolean value.']
+            ['is_stopped', 'boolean', 'message' => 'This boolean value.'],
+            [
+                [
+                    'buy_order_limit',
+                    'manual_resolve_buy_order'
+                ],
+                'integer'
+            ]
         ];
     }
 

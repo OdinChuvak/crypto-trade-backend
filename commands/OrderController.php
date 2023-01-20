@@ -555,11 +555,14 @@ class OrderController extends \yii\console\Controller
 
                     /**
                      * Пытаемся создать ответные ордера для текущего исполненного
+                     * Ордер на покупку создаем, только если не превышен лимит ордеров на покупку на линии
                      */
-                    \app\services\Order::createOrder($order, 'buy');
+                    if (\app\services\TradingLine::checkBuyOrderLimit($order->line)) {
+                        \app\services\Order::createOrder($order, 'buy');
+                    }
 
                     /**
-                     * Ордер на продажу выставляем только в ответна исполненный ордер на покупку
+                     * Ордер на продажу создаем только в ответ на исполненный ордер на покупку
                      */
                     if ($order->operation === 'buy') {
                         \app\services\Order::createOrder($order, 'sell');

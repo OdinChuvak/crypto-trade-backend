@@ -22,6 +22,8 @@ class m211021_201642_trading_line_table extends Migration
             'first_order_amount' => $this->float()->notNull(),
             'commission_taker_percent' => $this->double()->null(),
             'commission_maker_percent' => $this->double()->null(),
+            'buy_order_limit' => $this->tinyInteger()->defaultValue(3),
+            'manual_resolve_buy_order' => $this->tinyInteger(4)->defaultValue(0),
             'is_stopped' => $this->tinyInteger(4)->notNull()->defaultValue(0),
             'created_at' => $this->timestamp()->notNull()->append('DEFAULT CURRENT_TIMESTAMP()'),
         ]);

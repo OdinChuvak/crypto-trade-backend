@@ -45,4 +45,62 @@ class TradingLine
 
         return $isCheck;
     }
+
+    /**
+     * Проверяет, разрешено ли создавать ордер на покупку
+     *
+     * @param \app\models\TradingLine $line
+     * @return true
+     */
+    public static function checkBuyOrderLimit(\app\models\TradingLine $line): bool
+    {
+        /**
+         * Если задано ручное разрешение на выставление ордера на покупку,
+         * или не задан лимит на количество ордеров на покупку
+         */
+        if ($line->manual_resolve_buy_order || !$line->buy_order_limit) {
+
+            /**
+             * Отключим ручное разрешение и вернем true (разрешено создавать ордер на покупку для этой линии)
+             */
+            $line->manual_resolve_buy_order = false;
+            $line->save();
+
+            return true;
+        }
+
+        /**
+         * Если ручное разрешение не задано, а лимит задан, возмем количество ордеров на покупку
+         * среди последних N(\app\models\TradingLine::buy_order_limit) исполненных ордеров
+         * и сравним с заданным лимитом
+         */
+        $lastExecutionOrderIds = \app\models\Order::find()
+            ->select('id')
+            ->where([
+                '`order`.`is_executed`' => true,
+                '`order`.`trading_line_id`' => $line->id
+            ])
+            ->limit($line->buy_order_limit)
+            ->orderBy(['`order`.`executed_at`' => SORT_DESC])
+            ->column();
+
+        $numberOfBuyOrdersAmongTheLatest = \app\models\Order::find()
+            ->select('COUNT(*)')
+            ->where([
+                '`order`.`id`' => $lastExecutionOrderIds,
+                '`order`.`operation`' => 'buy'
+            ])
+            ->groupBy('operation')
+            ->scalar();
+
+        /**
+         * Если количество ордеров на покупку среди последних N меньше лимита,
+         * вернем true (разрешаем создавать новые ордера на покупку)
+         */
+        if ($line->buy_order_limit > $numberOfBuyOrdersAmongTheLatest) {
+            return true;
+        }
+
+        return false;
+    }
 }
