@@ -155,7 +155,7 @@ class OrderController extends \yii\console\Controller
                         $orderData = [
                             'pair' => $order->pair,
                             'quantity' => \app\services\Order::getQuantity($order),
-                            'price' => number_format($order->required_rate, $order->exchangePair->price_precision),
+                            'price' => $order->required_rate,
                             'operation' => $order->operation,
                         ];
 

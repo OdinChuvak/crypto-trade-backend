@@ -105,7 +105,7 @@ class Binance extends BaseExchange implements ExchangeInterface
         $apiResult = $this->sendPrivateQuery('order', [
             'symbol' => $pair->first_currency . $pair->second_currency,
             'quantity' => $quantity,
-            'price' => $price,
+            'price' => rtrim(number_format($price, 12), 0),
             'type' => 'LIMIT',
             'side' => $operation,
             'timeInForce' => 'GTC',
