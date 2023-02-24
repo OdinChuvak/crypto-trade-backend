@@ -103,7 +103,8 @@ class Binance extends BaseExchange implements ExchangeInterface
     public function createOrder(Pair $pair, float $quantity, float $price, string $operation): array
     {
         // -------------- Костыль для приведение цены в порядок -----------------------------
-        $price = number_format($price, 12, '.', '');
+        $price = number_format($price, 13, '.', '');
+        $price = rtrim($price, 1);
         $price = rtrim($price, 0);
         $price = rtrim($price, '.');
         // ----------------------------------------------------------------------------------
