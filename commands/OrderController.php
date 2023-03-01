@@ -620,9 +620,53 @@ class OrderController extends \yii\console\Controller
             foreach ($lines as $line) {
 
                 /**
-                 * Если последний исполненный ордер линии - на покупку, переходим к следующей линии
+                 * Если нет последнего исполненного ордера, переходим к следующей линии
                  */
-                if (!$line->lastExecutedOrder || $line->lastExecutedOrder->operation === 'buy') {
+                if (!$line->lastExecutedOrder) {
+                    continue;
+                }
+
+
+                /**
+                 * Если последний исполненный ордер линии - на покупку
+                 */
+                if ($line->lastExecutedOrder->operation === 'buy') {
+
+                    /**
+                     * Если последний исполненный ордер был продолжен,
+                     * то есть уже должны были быть созданы ответные ордера
+                     */
+                    if ($line->lastExecutedOrder->is_continued) {
+
+                        /**
+                         * Берем последний ордер на покупку, созданный после последнего исполненного ордера на покупку
+                         * (если был превышен лимит то такой ордер не был создан)
+                         */
+                        $lastCreatedBuyOrder = Order::findOne([
+                            '`order`.`trading_line_id`' => $line->id,
+                            '`order`.`is_executed`' => false,
+                            '`order`.`is_canceled`' => false,
+                            '`order`.`operation`' => 'buy',
+                            ['>', 'id', $line->lastExecutedOrder->id]
+                        ]);
+
+                        /**
+                         * Если нет ордера на покупку после последнего исполненного и продолженного ордера,
+                         * делаем вывод, что ордер на покупку не был создан по причине достижения лимита
+                         * ордеров на покупку \app\models\Order::buy_order_limit
+                         *
+                         * В таком случае проверяем, не задавалось ли ручное разрешение на создание ордера на покупку.
+                         * Если оно задавалось, создадим ордер на покупку.
+                         */
+                        if (!$lastCreatedBuyOrder && $line->manual_resolve_buy_order) {
+
+                            /**
+                             * Создаем ордер на покупку для последнего исполненного ордера
+                             */
+                            \app\services\Order::createOrder($line->lastExecutedOrder, 'buy');
+                        }
+                    }
+
                     continue;
                 }
 

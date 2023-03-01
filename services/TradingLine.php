@@ -55,22 +55,14 @@ class TradingLine
     public static function checkBuyOrderLimit(\app\models\TradingLine $line): bool
     {
         /**
-         * Если задано ручное разрешение на выставление ордера на покупку,
-         * или не задан лимит на количество ордеров на покупку
+         * Если не задан лимит на количество ордеров на покупку, вернем true
          */
-        if ($line->manual_resolve_buy_order || !$line->buy_order_limit) {
-
-            /**
-             * Отключим ручное разрешение и вернем true (разрешено создавать ордер на покупку для этой линии)
-             */
-            $line->manual_resolve_buy_order = false;
-            $line->save();
-
+        if (!$line->buy_order_limit) {
             return true;
         }
 
         /**
-         * Если ручное разрешение не задано, а лимит задан, возмем количество ордеров на покупку
+         * Если лимит задан, возмем количество ордеров на покупку
          * среди последних N(\app\models\TradingLine::buy_order_limit) исполненных ордеров
          * и сравним с заданным лимитом
          */
