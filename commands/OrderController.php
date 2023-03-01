@@ -642,13 +642,15 @@ class OrderController extends \yii\console\Controller
                          * Берем последний ордер на покупку, созданный после последнего исполненного ордера на покупку
                          * (если был превышен лимит то такой ордер не был создан)
                          */
-                        $lastCreatedBuyOrder = Order::findOne([
-                            '`order`.`trading_line_id`' => $line->id,
-                            '`order`.`is_executed`' => false,
-                            '`order`.`is_canceled`' => false,
-                            '`order`.`operation`' => 'buy',
-                            ['>', 'id', $line->lastExecutedOrder->id]
-                        ]);
+                        $lastCreatedBuyOrder = Order::find()
+                            ->where(['`order`.`trading_line_id`' => $line->id])
+                            ->andWhere(['>', '`order`.`id`', $line->lastExecutedOrder->id])
+                            ->onCondition([
+                                '`order`.`is_executed`' => false,
+                                '`order`.`is_canceled`' => false,
+                                '`order`.`operation`' => 'buy',
+                            ])
+                            ->one();
 
                         /**
                          * Если нет ордера на покупку после последнего исполненного и продолженного ордера,
