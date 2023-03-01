@@ -670,7 +670,7 @@ class OrderController extends \yii\console\Controller
                             /**
                              * Отключим ручное разрешение создания ордера на покупку на линии
                              */
-                            $line->manual_resolve_buy_order = false;
+                            $line->manual_resolve_buy_order = 0;
                             $line->save();
                         }
                     }
