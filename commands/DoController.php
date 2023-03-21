@@ -2,6 +2,8 @@
 
 namespace app\commands;
 
+use app\models\Order;
+use app\models\TradingLine;
 use app\models\User;
 use yii\base\UserException;
 use yii\console\Controller;
@@ -31,5 +33,51 @@ class DoController extends Controller
         } else {
             throw new Exception('Ошибка записи данных в БД');
         }
+    }
+
+    /**
+     * Создает ордера на покупку по актуальному курсу для новых активных торговых линий
+     *
+     * @return bool
+     */
+    public function actionCreateFirstOrders(): bool
+    {
+        $activeTradingLines = Order::find()
+            ->distinct()
+            ->select('trading_line_id')
+            ->column();
+
+        $newActiveTradingLines = TradingLine::find()
+            ->with('exchangeRate')
+            ->where(['NOT IN', 'id', $activeTradingLines])
+            ->andWhere(['is_stopped' => 0])
+            ->all();
+
+        foreach($newActiveTradingLines as $newActiveTradingLine) {
+
+            $newOrderData = [
+                'user_id' => $newActiveTradingLine->user_id,
+                'exchange_order_id' => null,
+                'trading_line_id' => $newActiveTradingLine->id,
+                'operation' => 'buy',
+                'required_rate' => $newActiveTradingLine->exchangeRate->value,
+                'actual_rate' => null,
+                'invested' => null,
+                'received' => null,
+                'commission_amount' => null,
+                'is_placed' => 0,
+                'is_executed' => 0,
+                'is_continued' => 0,
+                'is_error' => 0,
+                'is_canceled' => 0,
+                'created_at' => time(),
+                'placed_at' => null,
+                'executed_at' => null,
+            ];
+
+            Order::add($newOrderData);
+        }
+
+        return true;
     }
 }
