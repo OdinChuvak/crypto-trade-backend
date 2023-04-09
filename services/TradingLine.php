@@ -86,8 +86,8 @@ class TradingLine
             ->where([
                 'pair_id' => $order->line->pair_id,
                 'exchange_id' => $order->line->exchange_id,
-                $condition
             ])
+            ->andWhere($condition)
             ->orderBy(['value' => $order->operation === 'buy' ? SORT_ASC : SORT_DESC])
             ->one();
 
