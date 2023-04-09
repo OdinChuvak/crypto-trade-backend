@@ -90,7 +90,7 @@ class TradingLine extends ActiveRecord
         return $this->hasOne(ExchangeRate::class, [
                 'pair_id' => 'pair_id',
                 'exchange_id' => 'exchange_id',
-            ]);
+            ])->orderBy(['created_at' => SORT_DESC]);
     }
 
     public function getCurrentOrders(): ActiveQuery

@@ -68,10 +68,10 @@ class TradingLine
          */
         $lastOutsideRate = ExchangeRate::find()
             ->where([
-                [$order->operation === 'buy' ? '>' : '<', 'value', $order->required_rate],
                 'pair_id' => $order->line->pair_id,
                 'exchange_id' => $order->line->exchange_id,
             ])
+            ->andWhere([$order->operation === 'buy' ? '>' : '<', 'value', $order->required_rate])
             ->orderBy(['created_at' => SORT_DESC])
             ->one();
 
