@@ -7,15 +7,6 @@ use yii\db\Expression;
 
 class ExchangeRate extends BaseModel
 {
-    // Курс падает
-    const RATE_DYNAMIC_DOWN = -1;
-
-    // Курс растет
-    const RATE_DYNAMIC_UP = 1;
-
-    // Курс не меняется
-    const RATE_DYNAMIC_NOT = 0;
-
     /**
      * Срок годности курса валют
      */
@@ -27,7 +18,7 @@ class ExchangeRate extends BaseModel
             [
                 'class' => TimestampBehavior::class,
                 'createdAtAttribute' => false,
-                'updatedAtAttribute' => 'updated_at',
+                'updatedAtAttribute' => 'created_at',
                 'value' => new Expression('NOW()'),
             ],
         ];
@@ -48,14 +39,6 @@ class ExchangeRate extends BaseModel
                     'pair_id',
                 ],
                 'safe'
-            ],
-            [
-                [
-                    'dynamic'
-                ],
-                'integer',
-                'min' => -1,
-                'max' => 1
             ],
             [
                 [

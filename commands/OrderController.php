@@ -135,19 +135,13 @@ class OrderController extends \yii\console\Controller
                     \app\services\TradingLine::updateCommission($EXCHANGE, $order->line);
 
                     /**
-                     * Берем курс пары ордера (из БД)
-                     */
-                    $pairRate = ExchangeRate::findOne(['pair_id' => $order->pair->id]);
-
-                    /**
                      * Проверяем актуальность курса
                      */
-                    if (!\app\services\TradingLine::checkPairRate($pairRate, $order->line)) {
+                    if (!\app\services\TradingLine::checkPairRate($order->line)) {
                         continue;
                     }
 
-                    if (($order->operation === 'buy' && $order->required_rate >= $pairRate->value && $pairRate->dynamic === ExchangeRate::RATE_DYNAMIC_UP)
-                        || ($order->operation === 'sell' && $order->required_rate <= $pairRate->value && $pairRate->dynamic === ExchangeRate::RATE_DYNAMIC_DOWN))
+                    if (\app\services\TradingLine::isBestTimeForPlacement($order))
                     {
                         /**
                          * Формируем данные для ордера
@@ -681,7 +675,7 @@ class OrderController extends \yii\console\Controller
                 /**
                  * Проверяем актуальность курса для линии
                  */
-                if (!\app\services\TradingLine::checkPairRate($line->exchangeRate, $line)) {
+                if (!\app\services\TradingLine::checkPairRate($line)) {
                     continue;
                 }
 

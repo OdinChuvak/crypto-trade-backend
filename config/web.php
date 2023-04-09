@@ -46,6 +46,13 @@ $config = [
                     'levels' => ['error', 'warning'],
                     'logVars' => [],
                 ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info'],
+                    'categories' => ['isBestTimeForPlacement'],
+                    'logFile' => '@runtime/logs/isBestTimeForPlacement.log',
+                    'logVars' => [],
+                ],
             ],
         ],
         'db' => $db,

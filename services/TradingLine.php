@@ -28,9 +28,10 @@ class TradingLine
         return $line->save();
     }
 
-    public static function checkPairRate(?ExchangeRate $exchangeRate, \app\models\TradingLine $line): bool
+    public static function checkPairRate(\app\models\TradingLine $line): bool
     {
-        $isCheck = $exchangeRate && (time() - strtotime($exchangeRate->updated_at)) <= ExchangeRate::ACTUAL_RATE_TIME;
+        $exchangeRate = $line->exchangeRate;
+        $isCheck = $exchangeRate && (time() - strtotime($exchangeRate->created_at)) <= ExchangeRate::ACTUAL_RATE_TIME;
 
         if (!$isCheck) {
             Notice::add([
@@ -44,6 +45,118 @@ class TradingLine
         }
 
         return $isCheck;
+    }
+
+    /**
+     * @throws \yii\base\Exception
+     */
+    public static function isBestTimeForPlacement(\app\models\Order $order): bool
+    {
+        /**
+         * Самый актуальный курс валютной пары линии
+         */
+        $actualRate = ExchangeRate::find()
+            ->where([
+                'pair_id' => $order->line->pair_id,
+                'exchange_id' => $order->line->exchange_id,
+            ])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->one();
+
+        /**
+         * Возьмем последний курс, который не достиг нужного порога Order::required_rate
+         */
+        $lastOutsideRate = ExchangeRate::find()
+            ->where([
+                [$order->operation === 'buy' ? '>' : '<', 'value', $order->required_rate],
+                'pair_id' => $order->line->pair_id,
+                'exchange_id' => $order->line->exchange_id,
+            ])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->one();
+
+        /**
+         * Определяем минимальный (для покупки) или максимальный (для продажи) курс после прохождения порога required_rate
+         */
+        $condition = $lastOutsideRate
+            ? ['>', 'created_at', $lastOutsideRate->created_at]
+            : [$order->operation === 'buy' ? '<=' : '>=', 'value', $order->required_rate];
+
+        $extremumRate = ExchangeRate::find()
+            ->where([
+                'pair_id' => $order->line->pair_id,
+                'exchange_id' => $order->line->exchange_id,
+                $condition
+            ])
+            ->orderBy(['value' => $order->operation === 'buy' ? SORT_ASC : SORT_DESC])
+            ->one();
+
+        /**
+         * Если не удалось определить требуемые курсы (например, если их нет в БД)
+         */
+        if (!$actualRate || !$extremumRate) {
+            return false;
+        }
+
+        /**
+         * Если курс не достиг нужного порога.
+         * Для выставления ордера на покупку курс должен быть < Order::required_rate
+         * Для выставления ордера на продажу курс должен быть > Order::required_rate
+         */
+        if (($order->operation === 'buy' && $order->required_rate < $actualRate->value)
+            || ($order->operation === 'sell' && $order->required_rate > $actualRate->value)) return false;
+
+        /**
+         * Расчитываем спред между Order::required_rate и экстремумом, а также спред между экстремумом и текущим курсом
+         */
+        $spreadRequiredExtremum = abs($order->required_rate - $extremumRate->value);
+        $spreadRequiredExtremumInPercent = ($spreadRequiredExtremum / $order->required_rate) * 100;
+        $spreadActualExtremum = abs($actualRate->value - $extremumRate->value);
+
+        /**
+         * Определяем необходимую величину отскока для выставления ордера (в % от спреда)
+         */
+        if ($order->operation === 'buy') {
+            match (true) {
+                $spreadRequiredExtremumInPercent <= 1 => $rebound = 50,
+                $spreadRequiredExtremumInPercent <= 3 => $rebound = 30,
+                $spreadRequiredExtremumInPercent <= 10 => $rebound = 10,
+                default => $rebound = 0,
+            };
+        } elseif ($order->operation === 'sell') {
+            $rebound = 0;
+        }
+
+        /**
+         * Если динамика курса достигла нужной величины отскока, вернем true и запишем лог
+         */
+        if (($spreadActualExtremum / $spreadRequiredExtremum) * 100 >= $rebound) {
+            \Yii::info([
+                'order' => [
+                    'id' => $order->id,
+                    'operation' => $order->operation,
+                    'required_rate' => $order->required_rate,
+                ],
+                'lastOutsideRate' => [
+                    'id' => $lastOutsideRate->id,
+                    'value' => $lastOutsideRate->value,
+                ],
+                'extremumRate' => [
+                    'id' => $extremumRate->id,
+                    'value' => $extremumRate->value,
+                ],
+                'countedValues' => [
+                    'spreadRequiredExtremum' => $spreadRequiredExtremum,
+                    'spreadActualExtremum' => $spreadActualExtremum,
+                    'spreadRequiredExtremumInPercent' => $spreadRequiredExtremumInPercent,
+                    'rebound' => $rebound,
+                ],
+            ], 'isBestTimeForPlacement');
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

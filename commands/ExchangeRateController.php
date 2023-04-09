@@ -19,6 +19,11 @@ use Exception;
 class ExchangeRateController extends \yii\console\Controller
 {
     /**
+     * Время за которое собирается статистика курсов
+     */
+    const EXCHANGE_RATE_STATISTIC_LIFETIME  = 60 * 60 * 24;
+
+    /**
      * @throws Exception
      */
     public function actionIndex(): bool
@@ -64,32 +69,19 @@ class ExchangeRateController extends \yii\console\Controller
                     if ($tickerItem['first_currency'] === $pair->first_currency
                         && $tickerItem['second_currency'] === $pair->second_currency)
                     {
-                        $exchangeRate = ExchangeRate::findOne([
-                            'exchange_id' => $exchangeModel->id,
-                            'pair_id' => $pair->id,
-                        ]);
-
-                        if (!$exchangeRate) {
-                            $exchangeRate = new ExchangeRate();
-                        }
-
-                        $rateDynamic = $exchangeRate->value > $tickerItem['exchange_rate']
-                            ? ExchangeRate::RATE_DYNAMIC_DOWN
-                            : ($exchangeRate->value < $tickerItem['exchange_rate']
-                            ? ExchangeRate::RATE_DYNAMIC_UP : ExchangeRate::RATE_DYNAMIC_NOT);
-
-                        $exchangeRate->load([
+                        ExchangeRate::add([
                             'exchange_id' => $exchangeModel->id,
                             'pair_id' => $pair->id,
                             'value' => $tickerItem['exchange_rate'],
-                            'dynamic' => $rateDynamic,
-                        ], '');
-
-                        $exchangeRate->save();
+                        ]);
                     }
                 }
             }
         }
+
+        ExchangeRate::deleteAll([
+            ['<', 'created_at', date("Y-m-d H:i:s", time() - self::EXCHANGE_RATE_STATISTIC_LIFETIME)],
+        ]);
 
         return true;
     }
