@@ -79,9 +79,7 @@ class ExchangeRateController extends \yii\console\Controller
             }
         }
 
-        ExchangeRate::deleteAll([
-            ['<', 'created_at', date("Y-m-d H:i:s", time() - self::EXCHANGE_RATE_STATISTIC_LIFETIME)],
-        ]);
+        ExchangeRate::deleteAll(['<', 'created_at', date("Y-m-d H:i:s", time() - self::EXCHANGE_RATE_STATISTIC_LIFETIME)]);
 
         return true;
     }
