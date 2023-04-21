@@ -781,7 +781,7 @@ class OrderController extends \yii\console\Controller
                         /**
                          * Создаем ордер на покупку для последнего исполненного ордера
                          */
-                        \app\services\Order::createOrder($line->lastExecutedOrder, 'buy');
+                        \app\services\Order::createOrder($line->lastExecutedOrder, 'buy', [ 'is_easy_placement' => 1 ]);
 
                         /**
                          * Отключим ручное разрешение создания ордера на покупку на линии

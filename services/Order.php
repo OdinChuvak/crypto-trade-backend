@@ -117,7 +117,7 @@ class Order
      * @param $order_type
      * @return bool
      */
-    public static function createOrder(\app\models\Order $previousOrder, $order_type): bool
+    public static function createOrder(\app\models\Order $previousOrder, $order_type, $order_options = []): bool
     {
         /**
          * Получим данные по валютной паре ордера
@@ -134,12 +134,14 @@ class Order
             ? (100 * $previousOrder->actual_rate) / (100 + $previousOrder->line->buy_rate_step)
             : (1 + ($previousOrder->line->sell_rate_step / 100)) * $previousOrder->actual_rate;
 
-        \app\models\Order::add([
+        $order_data = [
             'user_id' => $previousOrder->user_id,
             'trading_line_id' => $previousOrder->trading_line_id,
             'operation' => $order_type,
             'required_rate' => self::numberValueNormalization($order_rate, $pair->price_precision, $pair->price_step),
-        ], '');
+        ];
+
+        \app\models\Order::add(array_merge($order_data, $order_options), '');
 
         return true;
     }

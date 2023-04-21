@@ -47,9 +47,6 @@ class TradingLine
         return $isCheck;
     }
 
-    /**
-     * @throws \yii\base\Exception
-     */
     public static function isBestTimeForPlacement(\app\models\Order $order): bool
     {
         /**
@@ -62,6 +59,21 @@ class TradingLine
             ])
             ->orderBy(['created_at' => SORT_DESC])
             ->one();
+
+        /**
+         * Если курс не достиг нужного порога.
+         * Для выставления ордера на покупку курс должен быть < Order::required_rate
+         * Для выставления ордера на продажу курс должен быть > Order::required_rate
+         */
+        if (($order->operation === 'buy' && $order->required_rate < $actualRate->value)
+            || ($order->operation === 'sell' && $order->required_rate > $actualRate->value)) return false;
+
+        /**
+         * Если для ордера задано легкое размещение (без условий, кроме достижения нужного порога)
+         */
+        if ($order->is_easy_placement) {
+            return true;
+        }
 
         /**
          * Возьмем последний курс, который не достиг нужного порога Order::required_rate
@@ -99,15 +111,7 @@ class TradingLine
         }
 
         /**
-         * Если курс не достиг нужного порога.
-         * Для выставления ордера на покупку курс должен быть < Order::required_rate
-         * Для выставления ордера на продажу курс должен быть > Order::required_rate
-         */
-        if (($order->operation === 'buy' && $order->required_rate < $actualRate->value)
-            || ($order->operation === 'sell' && $order->required_rate > $actualRate->value)) return false;
-
-        /**
-         * Расчитываем спред между Order::required_rate и экстремумом, а также спред между экстремумом и текущим курсом
+         * Насчитываем спред между Order::required_rate и экстремумом, а также спред между экстремумом и текущим курсом
          */
         $spreadRequiredExtremum = abs($order->required_rate - $extremumRate->value);
         $spreadRequiredExtremumInPercent = ($spreadRequiredExtremum / $order->required_rate) * 100;

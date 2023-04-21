@@ -24,6 +24,7 @@ class Order extends BaseModel
             'invested' => 'Инвестированная сумма',
             'received' => 'Полученная сумма',
             'commission_amount' => 'Размер комиссии',
+            'is_easy_placement' => 'Легкое размещение',
             'is_placed' => 'Размещен на бирже',
             'is_executed' => 'Исполнен',
             'is_continued' => 'Был продолжен',
@@ -75,6 +76,7 @@ class Order extends BaseModel
             ],
             [
                 [
+                    'is_easy_placement',
                     'is_error',
                     'is_placed',
                     'is_executed',
