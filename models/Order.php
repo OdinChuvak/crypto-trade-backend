@@ -138,7 +138,7 @@ class Order extends BaseModel
     public function getExchangePair(): \yii\db\ActiveQuery
     {
         return $this->hasOne(ExchangePair::class, [
-            'id' => 'pair_id',
+            'pair_id' => 'pair_id',
             'exchange_id' => 'exchange_id'
         ])->via('line');
     }
