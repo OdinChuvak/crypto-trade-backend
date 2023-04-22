@@ -24,7 +24,7 @@ class Order
             ->scalar();
 
         /**
-         * Получаем все исполненные ордера на покупоку до последней продажи
+         * Получаем все исполненные ордера на покупку после последней продажи
          */
         $lastBuyOrders = \app\models\Order::find()
             ->where([
@@ -59,52 +59,39 @@ class Order
         }
 
         /**
-         * Если исходный ордер является ордером на покупку, то тут песня
-         *
-         * Формула для рассчета количества в этом случае:
-         *
-         * $x = ($income + ∑$amount + ∑($quantity * $sell_rate)) / ($sell_rate - $rate);
-         * 
-         *      $income - эталонная прибыль. Рассчитывается на основании первой операции купли/продажи.
-         *                  Иными словами - сколько прибыли вышло бы, если бы был исполнен первый ордер на
-         *                  покупку и за ним последовал ордер на продажу того, что куплено.
-         *
-         *      $amount - инвестированные средства в ордер на покупку
-         * 
-         *      $quantity - полученное количество в результате исполнения ордера на покупку
-         * 
-         *      $rate - курс текущего ордера на покупку
-         * 
-         *      $sell_rate - курс для продажи ордера
+         * Берем стандартную прибыль по линии
          */
+        $oneStepIncome = ($order->line->first_order_amount / 100) * $order->line->sell_rate_step;
 
         /**
-         * Вычисляем $income
+         * Если исходный ордер является ордером на покупку, то сначала рассчитаем курс,
+         * по которой будем продавать текущий ордер в перспективе
          */
-        $firstBuyOrder = $lastBuyOrders[0];
+        $sell_rate = $order->required_rate + Math::getPercent($order->required_rate, $order->line->sell_rate_step);
 
         /**
-         * Тут рассчитываем эталонную величину прибыли
+         * Вычисляем вложенную в предыдущие ордера на покупку сумму и полученное количество
          */
-        $rateForSellFirstBuyOrder = $firstBuyOrder->required_rate + Math::getPercent($firstBuyOrder->required_rate, $order->line->sell_rate_step);
-        $amountForSellFirstBuyOrder = $rateForSellFirstBuyOrder * $firstBuyOrder->received;
-        $income = $amountForSellFirstBuyOrder - $firstBuyOrder->invested - $order->line->commission_maker_percent;
+        $investedAmount = 0;
+        $receivedQuantity = 0;
 
-        /**
-         * Рассчитываем остальные параметры формулы
-         */
-        $rate = $order->line->exchangeRate->value;
-        $sell_rate = $rate + Math::getPercent($rate, $order->line->sell_rate_step);
-        $amountSum = 0;
-        $quantityRateSum = 0;
-        
         foreach ($lastBuyOrders as $buyOrder) {
-            $amountSum += $buyOrder->invested;
-            $quantityRateSum += $buyOrder->received * $sell_rate;
+            $investedAmount += $buyOrder->invested;
+            $receivedQuantity += $buyOrder->received;
         }
 
+        /**
+         * Вычисляем убыток, который образуется от продажи $receivedQuantity по курсу $sell_rate
+         */
+        $loss = $investedAmount - $receivedQuantity * $sell_rate;
+
+        /**
+         * Вычисляем количество, необходимое для покрытия убытка и получения нужной прибыли
+         */
+        $needQuantity = ($oneStepIncome + $loss) / ($sell_rate * $order->required_rate);
+
         return self::numberValueNormalization(
-            ($income + $amountSum - $quantityRateSum) / ($sell_rate - $rate),
+            $needQuantity,
             $order->exchangePair->quantity_precision,
             $order->exchangePair->quantity_step
         );
