@@ -355,8 +355,6 @@ class OrderController extends \yii\console\Controller
                              * то инвестируемыми считаются средства во второй валюте, а получаемыми - в первой.
                              * В случае, если произведена операция продажи, то есть 'sell', инвестируемыми
                              * будут считаться средства первой валюты, а получаемыми второй.
-                             *
-                             * Комиссия взимается с получаемой валюты
                              */
 
                             $actual_rate += $trade['price'];
@@ -364,8 +362,8 @@ class OrderController extends \yii\console\Controller
                                 ? $trade['amount']
                                 : $trade['quantity'];
                             $received += $order->operation === 'buy'
-                                ? $trade['quantity'] - $trade['commission_amount']
-                                : $trade['amount'] - $trade['commission_amount'];
+                                ? $trade['quantity']
+                                : $trade['amount'];
                             $commission += $trade['commission_amount'];
                             $k++;
                         }
