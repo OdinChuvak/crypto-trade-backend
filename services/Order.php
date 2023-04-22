@@ -90,11 +90,8 @@ class Order
          */
         $needQuantity = ($oneStepIncome + $loss) / ($sell_rate - $order->required_rate);
 
-        /**
-         * В качестве объема для продажи возвращаем всю сумму покупок вместе с необходимым объемом
-         */
         return self::numberValueNormalization(
-            $needQuantity + $receivedQuantity,
+            $needQuantity,
             $order->exchangePair->quantity_precision,
             $order->exchangePair->quantity_step
         );
