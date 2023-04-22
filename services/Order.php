@@ -88,7 +88,7 @@ class Order
         /**
          * Вычисляем количество, необходимое для покрытия убытка и получения нужной прибыли
          */
-        $needQuantity = ($oneStepIncome + $loss) / ($sell_rate * $order->required_rate);
+        $needQuantity = ($oneStepIncome + $loss) / ($sell_rate - $order->required_rate);
 
         return self::numberValueNormalization(
             $needQuantity,
