@@ -7,6 +7,13 @@ use app\utils\Math;
 
 class Order
 {
+    /**
+     * Этот метод можно использовать строго после проверки актуальности курса по валютной паре ордера,
+     * а также только в момент непосредственного выставления ордера на бирже
+     *
+     * @param \app\models\Order|null $order
+     * @return float|null
+     */
     public static function getQuantity(?\app\models\Order $order): ?float
     {
         /**
@@ -65,9 +72,17 @@ class Order
 
         /**
          * Если исходный ордер является ордером на покупку, то сначала рассчитаем курс,
-         * по которой будем продавать текущий ордер в перспективе
+         * по которому будем продавать текущий ордер в перспективе.
+         *
+         * Тут есть важный момент - не факт, что ордер будет реализован по курсу $order->required_rate
+         * Точно определить курс реализации ордера заранее невозможно, соответственно и объем закупки точно рассчитать не получится
+         * Но, можно снизить погрешность, если в качестве курса реализации ордера выбрать актуальный курс в валютной паре
+         * Это имеет смысл, только в том случае, если расчет объема будет происходить непосредственно в момент выставления
+         * ордера на бирже, а также, курс, принимаемый за потенциальный курс покупки, будет актуален
+         * Поэтому для расчета $sell_rate будем использовать не $order->required_rate, а актуальный курс в валютной паре ордера
          */
-        $sell_rate = $order->required_rate + Math::getPercent($order->required_rate, $order->line->sell_rate_step);
+        $actual_pair_rate = $order->line->exchangeRate->value;
+        $sell_rate = $actual_pair_rate + Math::getPercent($actual_pair_rate, $order->line->sell_rate_step);
 
         /**
          * Вычисляем вложенную в предыдущие ордера на покупку сумму и полученное количество
@@ -88,7 +103,7 @@ class Order
         /**
          * Вычисляем количество, необходимое для покрытия убытка и получения нужной прибыли
          */
-        $needQuantity = ($oneStepIncome + $loss) / ($sell_rate - $order->required_rate);
+        $needQuantity = ($oneStepIncome + $loss) / ($sell_rate - $actual_pair_rate);
 
         return self::numberValueNormalization(
             $needQuantity,
