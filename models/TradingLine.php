@@ -53,7 +53,6 @@ class TradingLine extends ActiveRecord
             'pair',
             'exchangePair',
             'exchangeRate',
-            'currentOrders',
         ];
     }
 
@@ -93,10 +92,18 @@ class TradingLine extends ActiveRecord
             ])->orderBy(['created_at' => SORT_DESC]);
     }
 
-    public function getCurrentOrders(): ActiveQuery
+    /**
+     * openOrders - созданные и/или размещенные ордера линии, которые еще не были исполнены или отменены
+     *
+     * @return ActiveQuery
+     */
+    public function getOpenOrders(): ActiveQuery
     {
         return $this->hasMany(Order::class, ['trading_line_id' => 'id'])
-            ->onCondition(['is_canceled' => false, 'is_continued' => false]);
+            ->onCondition([
+                'is_executed' => false,
+                'is_canceled' => false,
+            ])->orderBy(['created_at' => SORT_DESC]);
     }
 
     /**
