@@ -87,11 +87,12 @@ class TradingLine extends ActiveRecord
     public function getExchangeRate(): ActiveQuery
     {
         return $this->hasOne(ExchangeRate::class, [
-                'pair_id' => 'pair_id',
+                'pair_id' => 'id',
                 'exchange_id' => 'exchange_id',
             ])
             ->orderBy(['created_at' => SORT_DESC])
-            ->limit(1);
+            ->limit(1)
+            ->via('exchangePair');
     }
 
     /**
