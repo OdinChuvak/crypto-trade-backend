@@ -84,14 +84,14 @@ class TradingLine extends ActiveRecord
         ]);
     }
 
-    public function getExchangeRate(): ActiveQuery
+    public function getExchangeRates(): ActiveQuery
     {
-        return $this->hasOne(ExchangeRate::class, [
+        return $this->hasMany(ExchangeRate::class, [
                 'pair_id' => 'pair_id',
                 'exchange_id' => 'exchange_id',
             ])
             ->orderBy(['created_at' => SORT_DESC])
-            ->limit(1);
+            ->limit(10);
     }
 
     /**

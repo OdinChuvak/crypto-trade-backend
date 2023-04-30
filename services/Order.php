@@ -81,7 +81,8 @@ class Order
          * ордера на бирже, а также, курс, принимаемый за потенциальный курс покупки, будет актуален
          * Поэтому для расчета $sell_rate будем использовать не $order->required_rate, а актуальный курс в валютной паре ордера
          */
-        $actual_pair_rate = $order->line->exchangeRate->value;
+        $actualExchangeRate = $order->line->exchangeRates[0];
+        $actual_pair_rate = $actualExchangeRate->value;
         $sell_rate = $actual_pair_rate + Math::getPercent($actual_pair_rate, $order->line->sell_rate_step);
 
         /**

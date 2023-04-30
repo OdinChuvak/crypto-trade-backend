@@ -55,12 +55,14 @@ class DoController extends Controller
 
         foreach($newActiveTradingLines as $newActiveTradingLine) {
 
+            $actualExchangeRate = $newActiveTradingLine->exchangeRates[0];
+
             $newOrderData = [
                 'user_id' => $newActiveTradingLine->user_id,
                 'exchange_order_id' => null,
                 'trading_line_id' => $newActiveTradingLine->id,
                 'operation' => 'buy',
-                'required_rate' => $newActiveTradingLine->exchangeRate->value,
+                'required_rate' => $actualExchangeRate->value,
                 'actual_rate' => null,
                 'invested' => null,
                 'received' => null,
