@@ -71,9 +71,7 @@ class TradingLine
         /**
          * Если для ордера задано легкое размещение (без условий, кроме достижения нужного порога)
          */
-        if ($order->is_easy_placement) {
-            return true;
-        }
+        if ($order->is_easy_placement) return true;
 
         /**
          * Возьмем последний курс, который не достиг нужного порога Order::required_rate
@@ -90,16 +88,14 @@ class TradingLine
         /**
          * Если происходит такое, то можно смело выкладывать ордер, так как курс достиг нужного порога
          */
-        if (!$lastOutsideRate) {
-            return true;
-        }
+        if (!$lastOutsideRate) return true;
 
         /**
          * Определяем минимальный (для покупки) или максимальный (для продажи) курс после прохождения порога required_rate
          */
         $condition = $lastOutsideRate
             ? ['>', 'created_at', $lastOutsideRate->created_at]
-            : [$order->operation === 'buy' ? '<=' : '>=', 'value', $order->required_rate];
+            : [$order->operation === 'buy' ? '<' : '>', 'value', $order->required_rate];
 
         $extremumRate = ExchangeRate::find()
             ->where([
@@ -113,9 +109,7 @@ class TradingLine
         /**
          * Если не удалось определить требуемые курсы (например, если их нет в БД)
          */
-        if (!$actualRate || !$extremumRate) {
-            return false;
-        }
+        if (!$actualRate || !$extremumRate) return false;
 
         /**
          * Насчитываем спред между Order::required_rate и экстремумом, а также спред между экстремумом и текущим курсом
