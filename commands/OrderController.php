@@ -600,7 +600,7 @@ class OrderController extends \yii\console\Controller
         foreach ($exchanges as $exchange) {
 
             $exchangeLines = TradingLine::find()
-                ->with(['openOrders', 'exchangeRate'])
+                ->with(['openOrders', 'exchangeRates'])
                 ->where(['exchange_id' => $exchange->id])
                 ->onCondition(['is_stopped' => 0])
                 ->all();
@@ -727,7 +727,7 @@ class OrderController extends \yii\console\Controller
             $lines = TradingLine::find()
                 ->with([
                     'lastExecutedOrder',
-                    'exchangeRate'
+                    'exchangeRates'
                 ])
                 ->where([
                     'exchange_id' => $exchange->id,

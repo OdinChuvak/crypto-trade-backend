@@ -48,7 +48,7 @@ class DoController extends Controller
             ->column();
 
         $newActiveTradingLines = TradingLine::find()
-            ->with('exchangeRate')
+            ->with('exchangeRates')
             ->where(['NOT IN', 'id', $activeTradingLines])
             ->andWhere(['is_stopped' => 0])
             ->all();

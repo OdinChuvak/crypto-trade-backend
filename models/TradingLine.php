@@ -52,7 +52,7 @@ class TradingLine extends ActiveRecord
         return [
             'pair',
             'exchangePair',
-            'exchangeRate',
+            'exchangeRates',
         ];
     }
 
