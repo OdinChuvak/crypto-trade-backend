@@ -601,7 +601,8 @@ class OrderController extends \yii\console\Controller
 
             $exchangeLines = TradingLine::find()
                 ->with(['openOrders', 'exchangeRate'])
-                ->where([ 'exchange_id' => $exchange->id ])
+                ->where(['exchange_id' => $exchange->id])
+                ->onCondition(['is_stopped' => 0])
                 ->all();
 
             foreach ($exchangeLines as $line) {
@@ -668,12 +669,12 @@ class OrderController extends \yii\console\Controller
                      * Добавим в лог запись о том, что ордер отменен
                      */
                     Notice::add([
-                        'user_id' => $lineOrder->user_id,
-                        'trading_line_id' => $lineOrder->trading_line_id,
-                        'order_id' => $lineOrder->id,
+                        'user_id' => $line->user_id,
+                        'reference' => 'order',
+                        'reference_id' => $lineOrder->id,
                         'type' => 'success',
                         'message' => 'Ордер успешно отменен!',
-                        'error_code' => null,
+                        'error_code' => null
                     ]);
 
                     /**
@@ -698,11 +699,11 @@ class OrderController extends \yii\console\Controller
                  */
                 Notice::add([
                     'user_id' => $newBuyOrder->user_id,
-                    'trading_line_id' => $newBuyOrder->trading_line_id,
-                    'order_id' => $newBuyOrder->id,
+                    'reference' => 'order',
+                    'reference_id' => $newBuyOrder->id,
                     'type' => 'success',
                     'message' => 'Ордер успешно создан!',
-                    'error_code' => null,
+                    'error_code' => null
                 ]);
             }
         }
