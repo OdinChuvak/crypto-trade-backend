@@ -92,7 +92,7 @@ class TradingLine extends ActiveRecord
             ])
             ->orderBy(['created_at' => SORT_DESC])
             ->limit(1)
-            ->via('exchangePair');
+            ->via('pair');
     }
 
     /**
