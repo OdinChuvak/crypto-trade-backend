@@ -607,8 +607,6 @@ class OrderController extends \yii\console\Controller
 
             foreach ($exchangeLines as $line) {
 
-                $actualExchangeRate = $line->exchangeRates[0];
-
                 /** @var $openBuyOrders - Получаем все открытые ордера на покупку */
                 $openBuyOrders = array_filter($line->openOrders, function ($order) {
                     return $order->operation === 'buy';
@@ -632,7 +630,7 @@ class OrderController extends \yii\console\Controller
                 $lastOpenBuyOrder = $openBuyOrders[0];
 
                 /** Если текущий курс пары не вырос более чем в TradingLine::sell_rate_step от необходимого курса на покупку, ничего не делаем */
-                if ($lastOpenBuyOrder->required_rate + Math::getPercent($lastOpenBuyOrder->required_rate, $line->sell_rate_step) >= $actualExchangeRate->value) continue;
+                if ($lastOpenBuyOrder->required_rate + Math::getPercent($lastOpenBuyOrder->required_rate, $line->sell_rate_step) >= $line->exchangeRate->value) continue;
 
                 /**
                  * Если курс все же пошел "сильно" выше от открытого ордера на покупку,
@@ -693,7 +691,7 @@ class OrderController extends \yii\console\Controller
                     'user_id' => $line->user_id,
                     'trading_line_id' => $line->id,
                     'operation' => 'buy',
-                    'required_rate' => $actualExchangeRate->value
+                    'required_rate' => $line->exchangeRate->value
                 ]);
 
                 /**

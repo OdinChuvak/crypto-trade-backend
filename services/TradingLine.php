@@ -30,8 +30,8 @@ class TradingLine
 
     public static function checkPairRate(\app\models\TradingLine $line): bool
     {
-        $actualExchangeRate = $line->exchangeRates[0];
-        $isCheck = $actualExchangeRate && (time() - strtotime($actualExchangeRate->created_at)) <= ExchangeRate::ACTUAL_RATE_TIME;
+        $exchangeRate = $line->exchangeRate;
+        $isCheck = $exchangeRate && (time() - strtotime($exchangeRate->created_at)) <= ExchangeRate::ACTUAL_RATE_TIME;
 
         if (!$isCheck) {
             Notice::add([
