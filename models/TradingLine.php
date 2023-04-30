@@ -86,13 +86,15 @@ class TradingLine extends ActiveRecord
 
     public function getExchangeRate(): ActiveQuery
     {
+        /** @var $subQuery - подзапрос последних данных по курсам валютных пар */
+        $subQuery = ExchangeRate::find()
+            ->select('MAX(created_at)')
+            ->groupBy(['pair_id', 'exchange_id']);
+
         return $this->hasOne(ExchangeRate::class, [
-                'pair_id' => 'id',
+                'pair_id' => 'pair_id',
                 'exchange_id' => 'exchange_id',
-            ])
-            ->orderBy(['created_at' => SORT_DESC])
-            ->limit(1)
-            ->via('pair');
+            ])->where(['created_at' => $subQuery]);
     }
 
     /**
