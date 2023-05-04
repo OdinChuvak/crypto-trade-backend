@@ -59,7 +59,7 @@ class MarketDynamicController extends \yii\console\Controller
                     ->one();
 
                 $pairRateForCalculatingDynamics = $pairRateQuery
-                    ->andWhere(['>=', 'created_at', date("Y-m-d H:i:s", $moment - 60 * 60 - ExchangeRate::ACTUAL_RATE_TIME)])
+                    ->andWhere(['<', 'created_at', date("Y-m-d H:i:s", $moment - 60 * 60 - ExchangeRate::ACTUAL_RATE_TIME)])
                     ->one();
 
                 $dynamicLabel = match (true) {
