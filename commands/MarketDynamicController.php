@@ -79,7 +79,7 @@ class MarketDynamicController extends \yii\console\Controller
                         'exchange_id' => $exchange->id,
                         'currency' => $currency,
                     ])
-                    ->one();
+                    ->one() ?: new MarketDynamic();
 
                 $marketDynamicModel->load([
                     'exchange_id' => $exchange->id,
