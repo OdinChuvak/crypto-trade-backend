@@ -54,12 +54,12 @@ class MarketDynamicController extends \yii\console\Controller
                     ->limit(1)
                     ->orderBy(['created_at' => SORT_DESC]);
 
-                $actualPairRate = $pairRateQuery
+                $actualPairRate = (clone $pairRateQuery)
                     ->andWhere(['>=', 'created_at', date("Y-m-d H:i:s", $moment - ExchangeRate::ACTUAL_RATE_TIME)])
                     ->one();
 
-                $pairRateForCalculatingDynamics = $pairRateQuery
-                    ->andWhere(['<', 'created_at', date("Y-m-d H:i:s", $moment - 60 * 60 - ExchangeRate::ACTUAL_RATE_TIME)])
+                $pairRateForCalculatingDynamics = (clone $pairRateQuery)
+                    ->andWhere(['<', 'created_at', date("Y-m-d H:i:s", $moment - 60 * 60)])
                     ->one();
 
                 $dynamicLabel = match (true) {
