@@ -6,13 +6,11 @@ use app\models\ExchangeRate;
 use app\models\MarketDynamic;
 use app\models\Pair;
 use app\models\TradingLine;
+use app\services\MarketService;
 use yii\base\DynamicModel;
 
 class MarketDynamicController extends \yii\console\Controller
 {
-    /**
-     *
-     */
     public function actionIndex(): bool
     {
         /**
@@ -59,7 +57,7 @@ class MarketDynamicController extends \yii\console\Controller
                     ->one();
 
                 $pairRateForCalculatingDynamics = (clone $pairRateQuery)
-                    ->andWhere(['<', 'created_at', date("Y-m-d H:i:s", $moment - 60 * 60)])
+                    ->andWhere(['<', 'created_at', date("Y-m-d H:i:s", $moment - MarketService::TIME_TO_COMPARE_MARKET_DYNAMICS)])
                     ->one();
 
                 $dynamicLabel = match (true) {

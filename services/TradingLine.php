@@ -5,7 +5,9 @@ namespace app\services;
 use app\enums\AppError;
 use app\exchanges\ExchangeInterface;
 use app\models\ExchangeRate;
+use app\models\MarketDynamic;
 use app\models\Notice;
+use app\models\Pair;
 use Exception;
 
 class TradingLine
@@ -49,6 +51,10 @@ class TradingLine
 
     public static function isBestTimeForPlacement(\app\models\Order $order): bool
     {
+        /** Если динамика рынка отрицательная, ордера на покупку не выставляем */
+        if ($order->operation === 'buy' && MarketService::isNegativeMarketDynamic($order->line))
+            return false;
+
         /**
          * Самый актуальный курс валютной пары линии
          */
