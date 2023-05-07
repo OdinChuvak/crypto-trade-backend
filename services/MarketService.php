@@ -9,7 +9,7 @@ class MarketService
 {
     const TIME_TO_COMPARE_MARKET_DYNAMICS = 60 * 60;
 
-    public static function isNegativeMarketDynamic(TradingLine $line): bool
+    public static function isNegativeMarketDynamic(\app\models\TradingLine $line): bool
     {
         /** @var $targetCurrency - целевая валюта в торговой паре (вторая в паре) */
         $targetCurrency = Pair::find()
