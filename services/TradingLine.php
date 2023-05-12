@@ -51,10 +51,6 @@ class TradingLine
 
     public static function isBestTimeForPlacement(\app\models\Order $order): bool
     {
-        /** Если динамика рынка отрицательная, ордера на покупку не выставляем */
-        if ($order->operation === 'buy' && MarketService::isNegativeMarketDynamic($order->line))
-            return false;
-
         /**
          * Самый актуальный курс валютной пары линии
          */
@@ -78,6 +74,10 @@ class TradingLine
          * Если для ордера задано легкое размещение (без условий, кроме достижения нужного порога)
          */
         if ($order->is_easy_placement) return true;
+
+        /** Если динамика рынка отрицательная, ордера на покупку не выставляем */
+        if ($order->operation === 'buy' && MarketService::isNegativeMarketDynamic($order->line))
+            return false;
 
         /**
          * Возьмем последний курс, который не достиг нужного порога Order::required_rate
