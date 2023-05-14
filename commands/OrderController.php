@@ -629,8 +629,8 @@ class OrderController extends \yii\console\Controller
                 /** @var $lastOpenBuyOrder - последний открытый ордер на покупку */
                 $lastOpenBuyOrder = $openBuyOrders[0];
 
-                /** Если текущий курс пары не вырос более чем в TradingLine::sell_rate_step от необходимого курса на покупку, ничего не делаем */
-                if ($lastOpenBuyOrder->required_rate + Math::getPercent($lastOpenBuyOrder->required_rate, $line->sell_rate_step) >= $line->exchangeRate->value) continue;
+                /** Если текущий курс пары не вырос более чем в  2 * TradingLine::sell_rate_step от необходимого курса на покупку, ничего не делаем */
+                if ($lastOpenBuyOrder->required_rate + Math::getPercent($lastOpenBuyOrder->required_rate, 2 * $line->sell_rate_step) >= $line->exchangeRate->value) continue;
 
                 /**
                  * Если курс все же пошел "сильно" выше от открытого ордера на покупку,
